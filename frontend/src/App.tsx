@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
+import { apiGet } from './lib/api';
 import { NAV_ITEMS, normalizePageId, type PageId } from './lib/navigation';
+import type { ColorScheme, GenerationJob, HistoryItem, Settings, Workspace } from './lib/types';
+import { DEFAULT_WORKSPACE, normalizeWorkspace } from './lib/workspacePayload';
 import './styles.css';
 
 export function App() {
@@ -10,6 +13,44 @@ export function App() {
     }
     return normalizePageId(window.location.hash.replace('#/', ''));
   });
+  const [settings, setSettings] = useState<Settings>({ baseUrl: '', apiKey: '', updatedAt: '' });
+  const [workspace, setWorkspace] = useState<Workspace>(DEFAULT_WORKSPACE);
+  const [palettes, setPalettes] = useState<ColorScheme[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [activeJobs, setActiveJobs] = useState<GenerationJob[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      apiGet<Settings>('/settings'),
+      apiGet<Workspace>('/workspace'),
+      apiGet<ColorScheme[]>('/color-schemes'),
+      apiGet<HistoryItem[]>('/history'),
+      apiGet<GenerationJob[]>('/generations/active'),
+    ])
+      .then(([nextSettings, nextWorkspace, nextPalettes, nextHistory, nextActiveJobs]) => {
+        if (!active) {
+          return;
+        }
+        setSettings(nextSettings);
+        setWorkspace(normalizeWorkspace(nextWorkspace));
+        setPalettes(nextPalettes);
+        setHistory(nextHistory);
+        setActiveJobs(nextActiveJobs);
+        setLoadError(null);
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+        setLoadError(error instanceof Error ? error.message : String(error));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const selectPage = (next: PageId) => {
     if (typeof window !== 'undefined') {
@@ -38,7 +79,10 @@ export function App() {
         </nav>
       </header>
       <section className="page-frame">
-        <p className="empty-state">页面待实现</p>
+        {loadError ? <p className="inline-hint">后端暂时不可用：{loadError}</p> : null}
+        <p className="empty-state">
+          页面待实现：{settings.baseUrl || workspace.prompt || palettes.length || history.length || activeJobs.length ? '已载入数据' : '等待数据'}
+        </p>
       </section>
     </main>
   );
