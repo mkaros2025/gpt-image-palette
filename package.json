@@ -2,15 +2,19 @@
   "name": "paperpalette",
   "private": true,
   "version": "0.3.0",
-  "description": "PaperPalette: Fastify image generation API",
+  "description": "PaperPalette: Fastify image generation app",
   "workspaces": [
-    "backend"
+    "backend",
+    "frontend"
   ],
   "scripts": {
-    "dev": "npm run dev -w backend",
-    "build": "npm run build -w backend",
+    "dev": "concurrently -n backend,frontend -c cyan,magenta \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w backend && npm run build -w frontend",
     "start": "npm run start -w backend",
-    "test": "npm run test -w backend"
+    "test": "npm run test -w backend && npm run test -w frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   },
   "engines": {
     "node": ">=22"
