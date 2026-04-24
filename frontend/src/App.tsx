@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { GeneratePage } from './components/GeneratePage';
+import { SettingsPage } from './components/SettingsPage';
 import { apiDelete, apiGet, apiPost, apiPut } from './lib/api';
 import { NAV_ITEMS, normalizePageId, type PageId } from './lib/navigation';
 import type { ColorScheme, GenerationJob, HistoryItem, Settings, Workspace } from './lib/types';
@@ -20,6 +21,7 @@ export function App() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [activeJobs, setActiveJobs] = useState<GenerationJob[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [settingsStatus, setSettingsStatus] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -97,6 +99,20 @@ export function App() {
     await refreshHistory();
   };
 
+  const saveSettings = async () => {
+    const saved = await apiPut<Settings>('/settings', {
+      baseUrl: settings.baseUrl,
+      apiKey: settings.apiKey,
+    });
+    setSettings(saved);
+    setSettingsStatus('已保存');
+  };
+
+  const testConnection = async () => {
+    const result = await apiPost<{ ok: boolean; message?: string }>('/settings/test-connection');
+    setSettingsStatus(result.ok ? '连接成功' : result.message ?? '连接失败');
+  };
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -133,6 +149,14 @@ export function App() {
             onOpenSettings={() => selectPage('settings')}
             onRefreshHistory={refreshHistory}
             onDeleteHistoryItem={deleteHistoryItem}
+          />
+        ) : page === 'settings' ? (
+          <SettingsPage
+            settings={settings}
+            status={settingsStatus}
+            onSettingsChange={setSettings}
+            onSave={saveSettings}
+            onTestConnection={testConnection}
           />
         ) : (
           <p className="empty-state">页面待实现</p>
