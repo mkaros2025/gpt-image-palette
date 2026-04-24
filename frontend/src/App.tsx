@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { apiGet } from './lib/api';
+import { GeneratePage } from './components/GeneratePage';
+import { apiDelete, apiGet, apiPost, apiPut } from './lib/api';
 import { NAV_ITEMS, normalizePageId, type PageId } from './lib/navigation';
 import type { ColorScheme, GenerationJob, HistoryItem, Settings, Workspace } from './lib/types';
-import { DEFAULT_WORKSPACE, normalizeWorkspace } from './lib/workspacePayload';
+import { buildGenerationPayload, buildWorkspacePayload, DEFAULT_WORKSPACE, normalizeWorkspace } from './lib/workspacePayload';
 import './styles.css';
 
 export function App() {
@@ -59,6 +60,43 @@ export function App() {
     setPage(next);
   };
 
+  const refreshHistory = async () => {
+    setHistory(await apiGet<HistoryItem[]>('/history'));
+  };
+
+  const refreshActiveJobs = async () => {
+    setActiveJobs(await apiGet<GenerationJob[]>('/generations/active'));
+  };
+
+  const saveWorkspace = async () => {
+    const saved = await apiPut<Workspace>('/workspace', buildWorkspacePayload(workspace));
+    setWorkspace(normalizeWorkspace(saved));
+  };
+
+  const uploadReferenceImage = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const saved = await apiPost<Workspace>('/workspace/reference-image', formData);
+    setWorkspace(normalizeWorkspace(saved));
+  };
+
+  const removeReferenceImage = async () => {
+    const saved = await apiDelete<Workspace>('/workspace/reference-image');
+    setWorkspace(normalizeWorkspace(saved));
+  };
+
+  const generate = async () => {
+    await saveWorkspace();
+    await apiPost('/generations', buildGenerationPayload(workspace));
+    await refreshActiveJobs();
+    await refreshHistory();
+  };
+
+  const deleteHistoryItem = async (id: string) => {
+    await apiDelete<{ ok: boolean }>(`/history/${id}`);
+    await refreshHistory();
+  };
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -80,9 +118,25 @@ export function App() {
       </header>
       <section className="page-frame">
         {loadError ? <p className="inline-hint">后端暂时不可用：{loadError}</p> : null}
-        <p className="empty-state">
-          页面待实现：{settings.baseUrl || workspace.prompt || palettes.length || history.length || activeJobs.length ? '已载入数据' : '等待数据'}
-        </p>
+        {page === 'generate' ? (
+          <GeneratePage
+            settings={settings}
+            workspace={workspace}
+            palettes={palettes}
+            activeJobs={activeJobs}
+            history={history}
+            onWorkspaceChange={setWorkspace}
+            onSaveWorkspace={saveWorkspace}
+            onUploadReferenceImage={uploadReferenceImage}
+            onRemoveReferenceImage={removeReferenceImage}
+            onGenerate={generate}
+            onOpenSettings={() => selectPage('settings')}
+            onRefreshHistory={refreshHistory}
+            onDeleteHistoryItem={deleteHistoryItem}
+          />
+        ) : (
+          <p className="empty-state">页面待实现</p>
+        )}
       </section>
     </main>
   );
