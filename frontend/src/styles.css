@@ -399,6 +399,74 @@ textarea {
   padding: 8px 9px;
 }
 
+.history-page {
+  display: grid;
+  gap: 14px;
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-form input {
+  min-height: 34px;
+  width: min(320px, 42vw);
+  border: 1px solid #d5d1c8;
+  border-radius: 7px;
+  background: #fffefb;
+  color: #20201f;
+  padding: 8px 9px;
+}
+
+.history-table-wrap {
+  overflow: auto;
+  border: 1px solid #dedbd2;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.history-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+}
+
+.history-table th,
+.history-table td {
+  border-bottom: 1px solid #ece8df;
+  padding: 10px;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.history-table th {
+  color: #6f6a60;
+  font-weight: 600;
+}
+
+.history-thumb {
+  width: 58px;
+  height: 58px;
+  border: 1px solid #dedbd2;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.prompt-cell {
+  max-width: 380px;
+  color: #20201f;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
 .danger-text {
   color: #9b2f2f;
 }

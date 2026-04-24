@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { GeneratePage } from './components/GeneratePage';
+import { HistoryPage } from './components/HistoryPage';
 import { PalettesPage } from './components/PalettesPage';
 import { SettingsPage } from './components/SettingsPage';
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from './lib/api';
@@ -24,6 +25,7 @@ export function App() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [settingsStatus, setSettingsStatus] = useState<string | null>(null);
   const [selectedPaletteId, setSelectedPaletteId] = useState('preset-okabe-ito');
+  const [historyQuery, setHistoryQuery] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -100,6 +102,22 @@ export function App() {
   const deleteHistoryItem = async (id: string) => {
     await apiDelete<{ ok: boolean }>(`/history/${id}`);
     await refreshHistory();
+  };
+
+  const searchHistory = async () => {
+    const suffix = historyQuery.trim() ? `?query=${encodeURIComponent(historyQuery.trim())}` : '';
+    setHistory(await apiGet<HistoryItem[]>(`/history${suffix}`));
+  };
+
+  const reuseHistoryItem = (patch: Partial<Workspace>) => {
+    setWorkspace(normalizeWorkspace({ ...workspace, ...patch }));
+    selectPage('generate');
+  };
+
+  const confirmAndDeleteHistoryItem = async (id: string) => {
+    if (window.confirm('删除这张图片？')) {
+      await deleteHistoryItem(id);
+    }
   };
 
   const saveSettings = async () => {
@@ -189,6 +207,15 @@ export function App() {
             onOpenSettings={() => selectPage('settings')}
             onRefreshHistory={refreshHistory}
             onDeleteHistoryItem={deleteHistoryItem}
+          />
+        ) : page === 'history' ? (
+          <HistoryPage
+            items={history}
+            query={historyQuery}
+            onQueryChange={setHistoryQuery}
+            onSearch={searchHistory}
+            onReuse={reuseHistoryItem}
+            onDelete={confirmAndDeleteHistoryItem}
           />
         ) : page === 'palettes' ? (
           <PalettesPage
