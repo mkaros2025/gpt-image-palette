@@ -49,6 +49,17 @@ export function createGatewayClient(defaultModel = 'gpt-image-2') {
       const payload = await postFormData(input.baseUrl, input.apiKey, '/images/edits', formData);
       return coerceGatewayResult(payload, input.size);
     },
+    async testConnection(input: { baseUrl: string; apiKey: string }) {
+      const response = await fetch(resolveEndpoint(input.baseUrl, '/models'), {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${input.apiKey}`,
+          Accept: 'application/json',
+        },
+      });
+      await readGatewayResponse(response);
+      return { ok: true };
+    },
   };
 }
 

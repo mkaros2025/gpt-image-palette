@@ -6,7 +6,7 @@ import { ZodError } from 'zod';
 
 import { openDatabase } from './db/client.js';
 import { createFileStore } from './services/fileStore.js';
-import { createGatewayClient } from './services/gatewayClient.js';
+import { createGatewayClient, type GatewayClient } from './services/gatewayClient.js';
 import { createGenerationService } from './services/generationService.js';
 import { createSqliteHistoryRepo } from './repositories/historyRepo.js';
 import { createSettingsRepo } from './repositories/settingsRepo.js';
@@ -19,7 +19,9 @@ import { registerWorkspaceRoutes } from './routes/workspace.js';
 
 export type BuildAppOptions = {
   dataDir: string;
+  staticDir?: string;
   logger?: boolean;
+  gateway?: GatewayClient;
 };
 
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
@@ -28,7 +30,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   const settingsRepo = createSettingsRepo(db);
   const workspaceRepo = createWorkspaceRepo(db);
   const historyRepo = createSqliteHistoryRepo(db);
-  const gateway = createGatewayClient();
+  const gateway = options.gateway ?? createGatewayClient();
   const generationService = createGenerationService({
     repo: historyRepo,
     fileStore,
@@ -66,11 +68,16 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     db.close();
   });
 
-  registerSettingsRoutes(app, db);
+  registerSettingsRoutes(app, db, gateway);
   registerWorkspaceRoutes(app, db, fileStore);
   registerColorSchemeRoutes(app, db);
   registerGenerationRoutes(app, generationService, historyRepo);
   registerHistoryRoutes(app, historyRepo, fileStore);
+
+  if (options.staticDir) {
+    const { registerStaticAssets } = await import('./plugins/staticAssets.js');
+    await registerStaticAssets(app, options.staticDir);
+  }
 
   return app;
 }
