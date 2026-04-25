@@ -18,7 +18,7 @@ const fullPalette = {
 
 describe('palette persistence', () => {
   it('creates, edits, defaults, and persists custom palettes', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-palettes-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-palettes-'));
 
     const first = await buildApp({ dataDir });
     const created = await first.inject({
@@ -71,7 +71,7 @@ describe('palette persistence', () => {
   });
 
   it('rejects palettes that do not match the fixed 8-slot schema', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-palettes-invalid-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-palettes-invalid-'));
     const app = await buildApp({ dataDir });
 
     const response = await app.inject({
@@ -90,7 +90,7 @@ describe('palette persistence', () => {
   });
 
   it('copies a preset into an editable custom palette and deletes custom palettes only', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-palettes-copy-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-palettes-copy-'));
     const app = await buildApp({ dataDir });
 
     const copied = await app.inject({

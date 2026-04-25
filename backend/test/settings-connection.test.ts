@@ -7,7 +7,7 @@ import { buildApp } from '../src/app';
 
 describe('settings connection test', () => {
   it('tests the saved gateway settings on demand', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-settings-test-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-settings-test-'));
     const app = await buildApp({
       dataDir,
       gateway: {
@@ -48,7 +48,7 @@ describe('settings connection test', () => {
   });
 
   it('returns a concise failure response when the gateway rejects the configuration', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-settings-test-fail-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-settings-test-fail-'));
     const app = await buildApp({
       dataDir,
       gateway: {

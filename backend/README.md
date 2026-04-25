@@ -1,6 +1,6 @@
 # Backend
 
-Fastify backend for PaperPalette. It owns settings, workspace drafts, palette persistence, generation calls, history, generated files, and production frontend static serving.
+Fastify backend for gpt-image-palette. It owns settings, workspace drafts, palette persistence, generation calls, history, generated files, and production frontend static serving.
 
 ## Scripts
 

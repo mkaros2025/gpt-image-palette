@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>gpt-image-palette White Cube Prototype</title>
+    <style>
+      :root {
+        --paper: #f7f8fa;
+        --surface: #ffffff;
+        --surface-soft: #fbfcfd;
+        --ink: #17191b;
+        --muted: #707780;
+        --faint: #a5adb5;
+        --line: #dde2e7;
+        --line-strong: #cbd3da;
+        --selected: #edf2f5;
+        --selected-line: #d2dbe2;
+        --accent: #2f3842;
+        --accent-hover: #232b34;
+        --warning: #7b6a3f;
+        --radius: 5px;
+        --shadow-panel: 0 8px 22px rgba(22, 30, 38, 0.045);
+        --shadow-gallery: 0 20px 68px rgba(22, 30, 38, 0.12), 0 1px 0 rgba(255, 255, 255, 0.88) inset;
+        --shadow-soft: 0 8px 22px rgba(22, 30, 38, 0.055), 0 1px 0 rgba(255, 255, 255, 0.82) inset;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "Noto Sans", Arial, sans-serif;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: var(--font);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        position: relative;
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        background: var(--paper);
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        z-index: -1;
+        border-radius: 999px;
+        filter: blur(34px);
+        opacity: 0.28;
+        pointer-events: none;
+      }
+
+      body::before {
+        width: 420px;
+        height: 220px;
+        right: 7vw;
+        top: 94px;
+        background: rgba(218, 225, 232, 0.82);
+      }
+
+      body::after {
+        width: 360px;
+        height: 180px;
+        left: 8vw;
+        bottom: 110px;
+        background: rgba(226, 232, 238, 0.72);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        outline-color: var(--accent);
+        outline-offset: 2px;
+      }
+
+      .page {
+        width: min(1280px, calc(100vw - 48px));
+        margin: 0 auto;
+        padding: 18px 0 32px;
+      }
+
+      .appbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 8px;
+        animation: rise-in 420ms ease both;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ink);
+        font-weight: 680;
+        letter-spacing: -0.02em;
+      }
+
+      .logo {
+        width: 26px;
+        height: 26px;
+        display: block;
+      }
+
+      .nav {
+        display: inline-flex;
+        gap: 4px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.58);
+        box-shadow: var(--shadow-soft);
+        padding: 3px;
+        backdrop-filter: blur(22px) saturate(1.18);
+      }
+
+      .nav button {
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--muted);
+        min-width: 68px;
+        padding: 7px 12px;
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+      }
+
+      .nav button:hover {
+        color: var(--ink);
+        background: var(--surface-soft);
+      }
+
+      .nav .active {
+        border-color: var(--selected-line);
+        background: var(--selected);
+        color: var(--ink);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(350px, 0.76fr) minmax(0, 1.24fr);
+        gap: 18px;
+        align-items: stretch;
+        margin-top: 16px;
+      }
+
+      .panel,
+      .preview {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow-panel);
+        overflow: hidden;
+      }
+
+      .panel,
+      .result-column {
+        min-height: 590px;
+      }
+
+      .panel {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+        animation: rise-in 480ms 70ms ease both;
+      }
+
+      .result-column {
+        display: grid;
+        animation: rise-in 480ms 130ms ease both;
+      }
+
+      .label-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .label,
+      label span,
+      .hint,
+      .status span,
+      .meta span,
+      .thumb small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .label strong {
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 620;
+      }
+
+      textarea,
+      select,
+      input {
+        width: 100%;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        color: var(--ink);
+      }
+
+      textarea {
+        min-height: 250px;
+        resize: vertical;
+        padding: 13px;
+        line-height: 1.58;
+      }
+
+      select,
+      input {
+        min-height: 38px;
+        padding: 0 10px;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      label {
+        display: grid;
+        gap: 7px;
+      }
+
+      .palette-preview {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 14px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: 10px 12px;
+      }
+
+      .swatches {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 5px;
+      }
+
+      .swatches i {
+        flex: 1 1 0;
+        height: 10px;
+        border-radius: 3px;
+      }
+
+      .swatches i:nth-child(1) { background: #0072b2; }
+      .swatches i:nth-child(2) { background: #e69f00; }
+      .swatches i:nth-child(3) { background: #009e73; }
+      .swatches i:nth-child(4) { background: #222; }
+      .swatches i:nth-child(5) { background: #fff; border: 1px solid var(--line); }
+      .swatches i:nth-child(6) { background: #efefef; }
+      .swatches i:nth-child(7) { background: #b9b9b9; }
+      .swatches i:nth-child(8) { background: #d55e00; }
+
+      .upload {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border: 1px dashed var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: 12px;
+      }
+
+      .reference-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .reference-thumb {
+        width: 58px;
+        height: 42px;
+        flex: 0 0 auto;
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(36, 43, 48, 0.5), transparent 44%),
+          linear-gradient(45deg, rgba(75, 96, 104, 0.52), transparent 52%),
+          #d8dde1;
+        box-shadow: 0 5px 12px rgba(0, 0, 0, 0.055);
+      }
+
+      .upload strong {
+        display: block;
+        margin-bottom: 3px;
+        font-size: 13px;
+        font-weight: 620;
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        min-height: 46px;
+        margin-top: auto;
+        border-top: 1px solid var(--line);
+        padding-top: 14px;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--warning);
+      }
+
+      .hint a {
+        color: var(--accent);
+        font-weight: 620;
+        text-decoration: none;
+      }
+
+      .primary,
+      .secondary {
+        border-radius: var(--radius);
+        min-height: 38px;
+        padding: 0 14px;
+        transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+      }
+
+      .primary {
+        border: 1px solid var(--accent);
+        background: linear-gradient(180deg, #3d4650, var(--accent));
+        color: #fff;
+        font-weight: 620;
+        box-shadow: 0 8px 18px rgba(47, 56, 66, 0.18);
+      }
+
+      .primary:hover {
+        background: linear-gradient(180deg, #34404a, var(--accent-hover));
+        transform: translateY(-1px);
+      }
+
+      .secondary {
+        border: 1px solid var(--line-strong);
+        background: var(--surface);
+        color: var(--ink);
+      }
+
+      .secondary:hover {
+        background: var(--selected);
+      }
+
+      .preview {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        height: 100%;
+        padding: 18px 18px 0;
+      }
+
+      .status {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 10px;
+        font-size: 13px;
+      }
+
+      .status strong {
+        color: var(--ink);
+        font-weight: 620;
+      }
+
+      .preview-image {
+        min-height: 0;
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(36, 43, 48, 0.72), transparent 38%),
+          linear-gradient(45deg, rgba(75, 96, 104, 0.68), transparent 48%),
+          radial-gradient(circle at 68% 24%, #d8c777 0 7%, transparent 8%),
+          #d9dde0;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.075);
+        overflow: hidden;
+        animation: image-settle 620ms 220ms ease both;
+      }
+
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border-top: 1px solid var(--line);
+        margin: 16px -18px 0;
+        min-height: 62px;
+      }
+
+      .meta div {
+        display: grid;
+        gap: 4px;
+        padding: 10px 14px;
+      }
+
+      .meta div + div {
+        border-left: 1px solid var(--line);
+      }
+
+      .meta strong {
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 620;
+      }
+
+      .gallery {
+        position: relative;
+        border: 1px solid rgba(222, 222, 222, 0.78);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.36);
+        overflow: hidden;
+        margin-top: 14px;
+        padding: 12px 14px 16px;
+        animation: rise-in 480ms 190ms ease both;
+      }
+
+      .gallery::before,
+      .gallery::after {
+        content: "";
+        position: absolute;
+        top: 52px;
+        bottom: 0;
+        z-index: 2;
+        width: 34px;
+        pointer-events: none;
+      }
+
+      .gallery::before {
+        left: 0;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
+      }
+
+      .gallery::after {
+        right: 0;
+        background: linear-gradient(270deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
+      }
+
+      .gallery-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+      }
+
+      .strip {
+        display: flex;
+        gap: 14px;
+        overflow-x: auto;
+        padding: 4px 2px 6px;
+        overscroll-behavior-inline: contain;
+        scroll-snap-type: x proximity;
+      }
+
+      .thumb {
+        flex: 0 0 176px;
+        display: block;
+        border-radius: var(--radius);
+        color: inherit;
+        text-decoration: none;
+        scroll-snap-align: start;
+        animation: thumb-in 520ms ease both;
+      }
+
+      .thumb-art {
+        aspect-ratio: 4 / 3;
+        height: auto;
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(36, 43, 48, 0.62), transparent 46%),
+          linear-gradient(45deg, rgba(75, 96, 104, 0.58), transparent 50%),
+          #d9dde0;
+        overflow: hidden;
+        box-shadow: 0 6px 14px rgba(22, 30, 38, 0.08);
+        transform-origin: center top;
+        transition: transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      .thumb:nth-child(2) { animation-delay: 50ms; }
+      .thumb:nth-child(3) { animation-delay: 100ms; }
+      .thumb:nth-child(4) { animation-delay: 150ms; }
+      .thumb:nth-child(5) { animation-delay: 200ms; }
+      .thumb:nth-child(6) { animation-delay: 250ms; }
+      .thumb:nth-child(7) { animation-delay: 300ms; }
+      .thumb:nth-child(8) { animation-delay: 350ms; }
+      .thumb:nth-child(9) { animation-delay: 400ms; }
+      .thumb:nth-child(10) { animation-delay: 450ms; }
+      .thumb:nth-child(11) { animation-delay: 500ms; }
+      .thumb:nth-child(12) { animation-delay: 550ms; }
+
+      .thumb:nth-child(2) .thumb-art {
+        background:
+          linear-gradient(145deg, rgba(75, 96, 104, 0.7), transparent 44%),
+          radial-gradient(circle at 70% 28%, #d5c36f 0 10%, transparent 11%),
+          #dce1e4;
+      }
+
+      .thumb:nth-child(3) .thumb-art {
+        background:
+          linear-gradient(28deg, rgba(36, 43, 48, 0.78), transparent 44%),
+          linear-gradient(150deg, rgba(180, 88, 35, 0.42), transparent 52%),
+          #dce1e4;
+      }
+
+      .thumb:nth-child(4) .thumb-art {
+        background:
+          linear-gradient(132deg, rgba(82, 102, 112, 0.6), transparent 52%),
+          radial-gradient(circle at 34% 72%, rgba(213, 199, 111, 0.78) 0 8%, transparent 9%),
+          #dfe4e8;
+      }
+
+      .thumb:nth-child(5) .thumb-art {
+        background:
+          linear-gradient(30deg, rgba(36, 43, 48, 0.68), transparent 46%),
+          linear-gradient(150deg, rgba(75, 96, 104, 0.54), transparent 50%),
+          #d7dde2;
+      }
+
+      .thumb:nth-child(6) .thumb-art {
+        background:
+          radial-gradient(circle at 62% 35%, rgba(213, 199, 111, 0.78) 0 9%, transparent 10%),
+          linear-gradient(145deg, rgba(75, 96, 104, 0.62), transparent 44%),
+          #dfe3e6;
+      }
+
+      .thumb:hover .thumb-art {
+        transform: perspective(700px) rotateX(2.4deg) translateY(-1px);
+        box-shadow: 0 14px 24px rgba(22, 30, 38, 0.18);
+      }
+
+      @keyframes thumb-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.985);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .detail-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: none;
+        place-items: center;
+        background: rgba(24, 24, 23, 0.22);
+        padding: 28px;
+      }
+
+      .detail-modal:target {
+        display: grid;
+      }
+
+      .detail-card {
+        width: min(860px, 100%);
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) minmax(260px, 0.75fr);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.16);
+        overflow: hidden;
+        animation: image-settle 180ms ease both;
+      }
+
+      .detail-image {
+        min-height: 360px;
+        border-radius: var(--radius);
+        margin: 14px;
+        background:
+          linear-gradient(135deg, rgba(36, 43, 48, 0.62), transparent 46%),
+          linear-gradient(45deg, rgba(75, 96, 104, 0.58), transparent 50%),
+          #d9dde0;
+      }
+
+      .detail-image--reference {
+        background:
+          linear-gradient(135deg, rgba(36, 43, 48, 0.5), transparent 44%),
+          linear-gradient(45deg, rgba(75, 96, 104, 0.52), transparent 52%),
+          #d8dde1;
+      }
+
+      .detail-body {
+        display: grid;
+        align-content: start;
+        gap: 14px;
+        border-left: 1px solid var(--line);
+        padding: 18px;
+      }
+
+      .detail-body h2 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .detail-body dl {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+      }
+
+      .detail-body dt {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .detail-body dd {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .close-link {
+        justify-self: start;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        color: var(--ink);
+        padding: 8px 12px;
+        text-decoration: none;
+      }
+
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes image-settle {
+        from {
+          opacity: 0;
+          transform: scale(0.985);
+        }
+
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 1ms !important;
+          transition-duration: 1ms !important;
+        }
+      }
+
+      @media (max-width: 940px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .panel,
+        .result-column {
+          min-height: auto;
+        }
+
+        .preview-image {
+          min-height: 420px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .page {
+          width: min(100vw - 28px, 1280px);
+          padding-top: 16px;
+        }
+
+        .appbar,
+        .actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .nav {
+          overflow-x: auto;
+        }
+
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="appbar">
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 32 32" role="img" aria-label="gpt-image-palette logo">
+            <rect x="5" y="4" width="19" height="24" rx="5" fill="#fff" stroke="#181817" stroke-width="1.4" />
+            <path d="M11 10h8M11 15h11M11 20h6" stroke="#181817" stroke-width="1.4" stroke-linecap="round" />
+            <circle cx="24" cy="22" r="5" fill="#49646b" />
+            <circle cx="22.4" cy="20.8" r="1.2" fill="#f7f8fa" />
+            <circle cx="25.4" cy="22.6" r="1.1" fill="#d8c777" />
+          </svg>
+          <span>gpt-image-palette</span>
+        </div>
+        <nav class="nav" aria-label="主导航">
+          <button class="active" type="button">生成</button>
+          <button type="button">历史</button>
+          <button type="button">配色</button>
+          <button type="button">设置</button>
+        </nav>
+      </header>
+
+      <section class="layout">
+        <form class="panel">
+          <div class="label-row">
+            <span class="label"><strong>Prompt</strong></span>
+            <span class="label">描述你需要的图片</span>
+          </div>
+          <textarea>Create a clean academic figure for a machine learning paper. Show a compact pipeline, restrained labels, and a publication-ready composition.</textarea>
+
+          <div class="controls">
+            <label>
+              <span>尺寸</span>
+              <select><option>1536x1024</option><option>1024x1024</option><option>1024x1536</option></select>
+            </label>
+            <label>
+              <span>质量</span>
+              <select><option>high</option><option>medium</option><option>low</option></select>
+            </label>
+            <label>
+              <span>数量</span>
+              <input type="number" min="1" max="4" value="2" />
+            </label>
+            <label>
+              <span>配色</span>
+              <select><option>Okabe Ito</option><option>Journal Figure</option></select>
+            </label>
+          </div>
+          <div class="palette-preview">
+            <span class="label">配色预览</span>
+            <span class="swatches" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          </div>
+
+          <div class="upload">
+            <a class="reference-link" href="#reference-detail" aria-label="预览参考图">
+              <span class="reference-thumb" aria-hidden="true"></span>
+              <span>
+                <strong>参考图</strong>
+                <span class="label">reference.png</span>
+              </span>
+            </a>
+            <button class="secondary" type="button">移除</button>
+          </div>
+
+          <div class="actions">
+            <p class="hint">缺少 baseURL 或 API Key。<a href="#">去设置</a></p>
+            <button class="primary" type="submit">生成图片</button>
+          </div>
+        </form>
+
+        <div class="result-column">
+          <section class="preview">
+            <div class="status">
+              <span>当前任务</span>
+              <strong>生成中 · 2 张</strong>
+            </div>
+            <div class="preview-image" role="img" aria-label="最近生成图片预览"></div>
+            <div class="meta">
+              <div><span>尺寸</span><strong>1536x1024</strong></div>
+              <div><span>质量</span><strong>high</strong></div>
+              <div><span>配色</span><strong>Okabe Ito</strong></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="gallery">
+        <div class="gallery-header">
+          <span class="label"><strong>最近结果</strong></span>
+          <span class="label">点击图片查看 prompt、分辨率、质量、配色、时间</span>
+        </div>
+        <div class="strip" data-horizontal-wheel>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+          <a class="thumb" href="#result-detail" aria-label="查看最近结果详情"><div class="thumb-art"></div></a>
+        </div>
+      </section>
+
+      <section class="detail-modal" id="reference-detail" aria-label="参考图预览">
+        <div class="detail-card">
+          <div class="detail-image detail-image--reference" aria-hidden="true"></div>
+          <div class="detail-body">
+            <h2>参考图</h2>
+            <dl>
+              <dt>文件</dt>
+              <dd>reference.png</dd>
+              <dt>用途</dt>
+              <dd>作为本次生成的视觉参考图。</dd>
+            </dl>
+            <a class="close-link" href="#">关闭</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-modal" id="result-detail" aria-label="生成结果详情">
+        <div class="detail-card">
+          <div class="detail-image" aria-hidden="true"></div>
+          <div class="detail-body">
+            <h2>生成详情</h2>
+            <dl>
+              <dt>Prompt</dt>
+              <dd>Create a clean academic figure for a machine learning paper. Show a compact pipeline, restrained labels, and a publication-ready composition.</dd>
+              <dt>分辨率</dt>
+              <dd>1536x1024</dd>
+              <dt>质量</dt>
+              <dd>high</dd>
+              <dt>配色</dt>
+              <dd>Okabe Ito</dd>
+              <dt>时间</dt>
+              <dd>2026-04-25 00:42</dd>
+            </dl>
+            <a class="close-link" href="#">关闭</a>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      document.querySelectorAll('[data-horizontal-wheel]').forEach((rail) => {
+        let target = rail.scrollLeft;
+        let current = rail.scrollLeft;
+        let frame = 0;
+
+        const animate = () => {
+          current += (target - current) * 0.18;
+          rail.scrollLeft = current;
+
+          if (Math.abs(target - current) > 0.4) {
+            frame = requestAnimationFrame(animate);
+          } else {
+            rail.scrollLeft = target;
+            frame = 0;
+          }
+        };
+
+        rail.addEventListener('wheel', (event) => {
+          if (rail.scrollWidth <= rail.clientWidth) {
+            return;
+          }
+
+          const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+          const max = rail.scrollWidth - rail.clientWidth;
+          target = Math.max(0, Math.min(max, target + delta * 1.35));
+
+          if (!frame) {
+            current = rail.scrollLeft;
+            frame = requestAnimationFrame(animate);
+          }
+
+          event.preventDefault();
+        }, { passive: false });
+      });
+    </script>
+  </body>
+</html>

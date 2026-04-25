@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { BrandLogo } from './components/BrandLogo';
 import { GeneratePage } from './components/GeneratePage';
 import { HistoryPage } from './components/HistoryPage';
 import { PalettesPage } from './components/PalettesPage';
@@ -175,9 +176,9 @@ export function App() {
     <main className="app-shell">
       <header className="topbar">
         <button className="brand-button" type="button" onClick={() => selectPage('generate')}>
-          PaperPalette
+          <BrandLogo />
         </button>
-        <nav className="topnav" aria-label="主导航">
+        <nav className="topnav topnav--glass" aria-label="主导航">
           {NAV_ITEMS.map((item) => (
             <button
               key={item.id}
@@ -211,6 +212,7 @@ export function App() {
         ) : page === 'history' ? (
           <HistoryPage
             items={history}
+            palettes={palettes}
             query={historyQuery}
             onQueryChange={setHistoryQuery}
             onSearch={searchHistory}

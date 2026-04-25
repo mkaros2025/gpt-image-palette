@@ -99,7 +99,7 @@ export function createWorkspaceRepo(db: SqliteDatabase) {
     if (!row) {
       return {
         prompt: '',
-        size: '1024x1024',
+        size: 'auto',
         quality: 'high',
         colorSchemeId: 'preset-okabe-ito',
         customColors: null,

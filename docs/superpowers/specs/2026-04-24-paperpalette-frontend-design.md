@@ -1,8 +1,8 @@
-# PaperPalette Frontend Design Spec
+# gpt-image-palette Frontend Design Spec
 
 ## Goal
 
-Rebuild the PaperPalette frontend from scratch as a quiet, minimal, beautiful, and easy-to-use image generation tool. The UI should feel like a precise work surface, not a marketing page, dashboard demo, or decorative experiment.
+Rebuild the gpt-image-palette frontend from scratch as a quiet, minimal, beautiful, and easy-to-use image generation tool. The UI should feel like a precise work surface, not a marketing page, dashboard demo, or decorative experiment.
 
 The frontend will use React + Vite + TypeScript. In production, Fastify will serve the built frontend and the existing API from the same service.
 
@@ -27,7 +27,7 @@ The app has four pages:
 3. Palettes
 4. Settings
 
-Navigation uses a lightweight top navigation. It must not visually occupy a full heavy row. The header should contain the `PaperPalette` label and compact page links. The active page should be indicated with a subtle underline, small marker, or restrained background.
+Navigation uses a lightweight top navigation. It must not visually occupy a full heavy row. The header should contain the `gpt-image-palette` label and compact page links. The active page should be indicated with a subtle underline, small marker, or restrained background.
 
 ## Visual Direction
 

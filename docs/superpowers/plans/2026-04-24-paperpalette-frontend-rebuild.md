@@ -1,8 +1,8 @@
-# PaperPalette Frontend Rebuild Implementation Plan
+# gpt-image-palette Frontend Rebuild Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rebuild PaperPalette as a React + Vite + TypeScript frontend served by the existing Fastify backend, with a quiet four-page UI for generation, history, palette management, and settings.
+**Goal:** Rebuild gpt-image-palette as a React + Vite + TypeScript frontend served by the existing Fastify backend, with a quiet four-page UI for generation, history, palette management, and settings.
 
 **Architecture:** Keep Fastify as the single production service. Recreate `frontend/` as a Vite SPA for development, then restore Fastify static serving so `npm run build && npm run start` serves both API and frontend. Add backend support for persistent custom palettes and manual connection testing before wiring the UI to those APIs.
 
@@ -91,7 +91,7 @@ const fullPalette = {
 
 describe('palette persistence', () => {
   it('creates, edits, defaults, and persists custom palettes', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-palettes-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-palettes-'));
 
     const first = await buildApp({ dataDir });
     const created = await first.inject({
@@ -144,7 +144,7 @@ describe('palette persistence', () => {
   });
 
   it('rejects palettes that do not match the fixed 8-slot schema', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-palettes-invalid-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-palettes-invalid-'));
     const app = await buildApp({ dataDir });
 
     const response = await app.inject({
@@ -163,7 +163,7 @@ describe('palette persistence', () => {
   });
 
   it('copies a preset into an editable custom palette and deletes custom palettes only', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-palettes-copy-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-palettes-copy-'));
     const app = await buildApp({ dataDir });
 
     const copied = await app.inject({
@@ -595,7 +595,7 @@ import { buildApp } from '../src/app';
 
 describe('settings connection test', () => {
   it('tests the saved gateway settings on demand', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-settings-test-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-settings-test-'));
     const app = await buildApp({
       dataDir,
       gateway: {
@@ -636,7 +636,7 @@ describe('settings connection test', () => {
   });
 
   it('returns a concise failure response when the gateway rejects the configuration', async () => {
-    const dataDir = mkdtempSync(join(tmpdir(), 'paperpalette-settings-test-fail-'));
+    const dataDir = mkdtempSync(join(tmpdir(), 'gpt-image-palette-settings-test-fail-'));
     const app = await buildApp({
       dataDir,
       gateway: {
@@ -956,10 +956,10 @@ Update root `package.json`:
 
 ```json
 {
-  "name": "paperpalette",
+  "name": "gpt-image-palette",
   "private": true,
   "version": "0.3.0",
-  "description": "PaperPalette: Fastify image generation app",
+  "description": "gpt-image-palette: Fastify image generation app",
   "workspaces": [
     "backend",
     "frontend"
@@ -1120,7 +1120,7 @@ Create `frontend/index.html`:
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PaperPalette</title>
+    <title>gpt-image-palette</title>
   </head>
   <body>
     <div id="root"></div>
@@ -1173,7 +1173,7 @@ export function App() {
     <main className="app-shell">
       <header className="topbar">
         <button className="brand-button" type="button" onClick={() => selectPage('generate')}>
-          PaperPalette
+          gpt-image-palette
         </button>
         <nav className="topnav" aria-label="主导航">
           {NAV_ITEMS.map((item) => (
@@ -2511,7 +2511,7 @@ describe('App shell', () => {
   it('does not render marketing or onboarding copy in the default shell', () => {
     const html = renderToStaticMarkup(<App />);
 
-    expect(html).toContain('PaperPalette');
+    expect(html).toContain('gpt-image-palette');
     expect(html).toContain('生成');
     expect(html).toContain('历史');
     expect(html).toContain('配色');
@@ -2629,9 +2629,9 @@ pkill -f "vite --host 127.0.0.1 --port 43174" >/dev/null 2>&1 || true
 Update `README.md`:
 
 ```md
-# PaperPalette
+# gpt-image-palette
 
-PaperPalette 是一个简约的科研配图生成工具。它包含 React 前端和 Fastify 后端，生产环境由 Fastify 同时提供页面、API 和本地生成文件访问。
+gpt-image-palette 是一个简约的科研配图生成工具。它包含 React 前端和 Fastify 后端，生产环境由 Fastify 同时提供页面、API 和本地生成文件访问。
 
 ## 功能
 

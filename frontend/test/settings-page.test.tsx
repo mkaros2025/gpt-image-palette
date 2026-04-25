@@ -20,5 +20,9 @@ describe('SettingsPage', () => {
     expect(html).toContain('sk-visible');
     expect(html).toContain('保存');
     expect(html).toContain('测试连接');
+    expect(html).toContain('class="settings-page"');
+    expect(html).not.toContain('连接状态');
+    expect(html).not.toContain('配置来源');
+    expect(html).not.toContain('后端本地存储');
   });
 });

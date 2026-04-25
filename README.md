@@ -1,6 +1,6 @@
-# PaperPalette
+# gpt-image-palette
 
-PaperPalette 是一个简约的科研配图生成工具。它包含 React 前端和 Fastify 后端，生产环境由 Fastify 同时提供页面、API 和本地生成文件访问。
+gpt-image-palette 是一个简约的科研配图生成工具。它包含 React 前端和 Fastify 后端，生产环境由 Fastify 同时提供页面、API 和本地生成文件访问。
 
 ## 功能
 

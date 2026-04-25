@@ -19,12 +19,30 @@ describe('workspace payload helpers', () => {
 
     expect(workspace).toMatchObject({
       prompt: ' paper figure ',
-      size: '1024x1024',
+      size: 'auto',
       quality: 'high',
       colorSchemeId: 'preset-okabe-ito',
       count: 4,
       referenceImagePath: '/data/ref.png',
     });
+  });
+
+  it('preserves the explicit no-palette option', () => {
+    const payload = buildGenerationPayload({
+      prompt: 'cell diagram',
+      size: 'auto',
+      quality: 'high',
+      colorSchemeId: 'none',
+      customColors: null,
+      count: 1,
+      referenceImagePath: null,
+      referenceImageName: null,
+      referenceImageMimeType: null,
+      updatedAt: 'now',
+    });
+
+    expect(payload.colorSchemeId).toBe('none');
+    expect(payload.size).toBe('auto');
   });
 
   it('builds the generation payload expected by the backend', () => {

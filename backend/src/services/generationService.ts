@@ -6,6 +6,8 @@ import type { HistoryRepo } from '../repositories/historyRepo.js';
 import type { FileStore } from './fileStore.js';
 import type { GatewayClient } from './gatewayClient.js';
 
+const NO_COLOR_SCHEME_ID = 'none';
+
 export type StartBatchInput = {
   prompt: string;
   size: string;
@@ -81,8 +83,9 @@ export function createGenerationService(options: GenerationServiceOptions) {
 
     let completedCount = 0;
     let failedCount = 0;
-    const palette = resolveColorPalette(input.colorSchemeId, input.customColors);
-    const palettePrompt = formatColorPalettePrompt(palette);
+    const palettePrompt = input.colorSchemeId === NO_COLOR_SCHEME_ID
+      ? null
+      : formatColorPalettePrompt(resolveColorPalette(input.colorSchemeId, input.customColors));
 
     for (const image of images) {
       await options.repo.updateImage(image.id, { status: 'running' as const });
@@ -94,7 +97,7 @@ export function createGenerationService(options: GenerationServiceOptions) {
 
       try {
         const gatewayConfig = options.getGatewayConfig?.();
-        const prompt = `${imageRecord.prompt}\n\n${palettePrompt}`;
+        const prompt = palettePrompt ? `${imageRecord.prompt}\n\n${palettePrompt}` : imageRecord.prompt;
         const hasReferenceImage =
           Boolean(input.referenceImagePath) && (await options.fileStore.exists(input.referenceImagePath!));
 

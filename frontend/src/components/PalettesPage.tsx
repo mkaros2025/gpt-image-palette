@@ -2,6 +2,18 @@ import { useEffect, useState } from 'react';
 
 import { PALETTE_SLOTS } from '../lib/paletteSlots';
 import type { ColorScheme, PaletteColors } from '../lib/types';
+import { PaletteSwatches } from './PaletteSwatches';
+
+const SLOT_LABELS: Record<(typeof PALETTE_SLOTS)[number], string> = {
+  primary: '主色',
+  secondary: '辅助色',
+  tertiary: '强调色',
+  text: '文字',
+  fill: '填充',
+  section_bg: '背景',
+  border: '边界',
+  arrow: '箭头',
+};
 
 type Props = {
   palettes: ColorScheme[];
@@ -31,14 +43,20 @@ export function PalettesPage(props: Props) {
   return (
     <section className="palette-page split-page">
       <aside className="panel palette-list">
-        <div className="section-heading">
+        <div className="section-head">
           <h1>配色</h1>
           <button className="quiet-button" type="button" onClick={() => void props.onCreate('新配色', colors)}>新建</button>
         </div>
         {props.palettes.map((palette) => (
-          <button key={palette.id} className={palette.id === selected.id ? 'list-row list-row--active' : 'list-row'} type="button" onClick={() => props.onSelect(palette.id)}>
-            <span>{palette.name}</span>
-            <small>{palette.isPreset ? '预设' : '自定义'}{palette.isDefault ? ' / 默认' : ''}</small>
+          <button
+            key={palette.id}
+            className={palette.id === selected.id ? 'palette-card palette-card--active' : 'palette-card'}
+            type="button"
+            onClick={() => props.onSelect(palette.id)}
+          >
+            <strong>{palette.name}</strong>
+            <span className="subtle">{palette.isPreset ? '预设' : '自定义'}{palette.isDefault ? ' / 默认' : ''}</span>
+            <PaletteSwatches colors={palette.colors} className="palette-swatches--compact" label={`${palette.name} 配色`} />
           </button>
         ))}
       </aside>
@@ -48,27 +66,58 @@ export function PalettesPage(props: Props) {
           void props.onSave(selected.id, name, colors);
         }
       }}>
-        <label className="field field--stacked">
-          <span>名称</span>
-          <input value={name} disabled={selected.isPreset} onChange={(event) => setName(event.target.value)} />
-        </label>
-        <div className="color-slot-grid">
-          {PALETTE_SLOTS.map((slot) => (
-            <label className="color-slot" key={slot}>
-              <span>{slot}</span>
-              <input type="color" value={colors[slot]} disabled={selected.isPreset} onChange={(event) => setColors({ ...colors, [slot]: event.target.value })} />
-              <input value={colors[slot]} disabled={selected.isPreset} onChange={(event) => setColors({ ...colors, [slot]: event.target.value })} />
-            </label>
-          ))}
+        <div className="section-head">
+          <h1>编辑配色</h1>
+          <span>{selected.isPreset ? '预设只读，可复制后编辑' : '自定义方案'}</span>
         </div>
-        <div className="button-row">
-          {selected.isPreset ? (
-            <button className="primary-button" type="button" onClick={() => void props.onCopy(selected.id, `${selected.name} Copy`)}>复制为自定义</button>
-          ) : (
-            <button className="primary-button" type="submit">保存配色</button>
-          )}
-          <button className="quiet-button" type="button" onClick={() => void props.onSetDefault(selected.id)}>设为默认</button>
-          {!selected.isPreset ? <button className="quiet-button danger-text" type="button" onClick={() => void props.onDelete(selected.id)}>删除</button> : null}
+        <div className="palette-workbench">
+          <div className="palette-hero">
+            <div
+              className="palette-poster"
+              style={{
+                background: `linear-gradient(135deg, ${colors.primary}, transparent 48%), linear-gradient(45deg, ${colors.secondary}, transparent 54%), ${colors.section_bg}`,
+              }}
+              aria-hidden="true"
+            />
+            <div className="palette-summary-card">
+              <span className="label">当前方案</span>
+              {selected.isPreset ? (
+                <h2>{selected.name}</h2>
+              ) : (
+                <input
+                  className="palette-title-input"
+                  aria-label="配色名称"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              )}
+              <span className="subtle">{selected.description || (selected.isPreset ? '预设配色' : '自定义配色')}</span>
+              <PaletteSwatches colors={colors} />
+              <div className="palette-actions-card" aria-label="配色操作">
+                {selected.isPreset ? (
+                  <button className="primary-button" type="button" onClick={() => void props.onCopy(selected.id, `${selected.name} Copy`)}>复制为自定义</button>
+                ) : (
+                  <button className="primary-button" type="submit">保存配色</button>
+                )}
+                <button className="quiet-button" type="button" onClick={() => void props.onSetDefault(selected.id)}>设为默认</button>
+                {!selected.isPreset ? <button className="quiet-button danger-text" type="button" onClick={() => void props.onDelete(selected.id)}>删除</button> : null}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="palette-editor-body">
+          <div className="color-slot-list">
+            {PALETTE_SLOTS.map((slot) => (
+              <label className="color-slot" key={slot}>
+                <span className="color-slot-name">
+                  <strong>{SLOT_LABELS[slot]}</strong>
+                  <em>{slot}</em>
+                </span>
+                <input type="color" value={colors[slot]} disabled={selected.isPreset} onChange={(event) => setColors({ ...colors, [slot]: event.target.value })} />
+                <input value={colors[slot]} disabled={selected.isPreset} onChange={(event) => setColors({ ...colors, [slot]: event.target.value })} />
+              </label>
+            ))}
+          </div>
         </div>
       </form>
     </section>

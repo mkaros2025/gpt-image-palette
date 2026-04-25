@@ -2,7 +2,7 @@ import type { Workspace } from './types';
 
 export const DEFAULT_WORKSPACE: Workspace = {
   prompt: '',
-  size: '1024x1024',
+  size: 'auto',
   quality: 'high',
   colorSchemeId: 'preset-okabe-ito',
   customColors: null,

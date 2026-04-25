@@ -56,6 +56,47 @@ describe('generation service', () => {
     expect(items.every((item) => item.prompt === 'cell diagram')).toBe(true);
   });
 
+  it('does not append palette instructions when color scheme is none', async () => {
+    const repo = createMemoryHistoryRepo();
+    const prompts: string[] = [];
+    const fileStore = {
+      async writeFile(_path: string, _bytes: Buffer) {},
+      async exists(_path: string) {
+        return false;
+      },
+      async removeFile(_path: string) {},
+      async readFile(_path: string) {
+        return Buffer.from('fake');
+      },
+    };
+    const gateway = {
+      async generateImage(input: { prompt: string }) {
+        prompts.push(input.prompt);
+        return { imageBase64: 'ZmFrZQ==', width: 1024, height: 1024 };
+      },
+      async editImage() {
+        throw new Error('unexpected edit call');
+      },
+    };
+
+    const service = createGenerationService({ repo, fileStore, gateway });
+    await service.startBatch({
+      prompt: 'plain prompt',
+      size: 'auto',
+      quality: 'high',
+      colorSchemeId: 'none',
+      customColors: null,
+      count: 1,
+      referenceImagePath: null,
+      referenceImageName: null,
+      referenceImageMimeType: null,
+    });
+
+    await service.waitForIdle();
+
+    expect(prompts).toEqual(['plain prompt']);
+  });
+
   it('keeps failed records searchable and deletes one image without removing siblings', async () => {
     const repo = createMemoryHistoryRepo();
     const first = await repo.createCompletedImage({

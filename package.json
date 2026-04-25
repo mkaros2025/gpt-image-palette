@@ -1,8 +1,8 @@
 {
-  "name": "paperpalette",
+  "name": "gpt-image-palette",
   "private": true,
   "version": "0.3.0",
-  "description": "PaperPalette: Fastify image generation app",
+  "description": "gpt-image-palette: Fastify image generation app",
   "workspaces": [
     "backend",
     "frontend"

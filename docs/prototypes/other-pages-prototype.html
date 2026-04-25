@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>gpt-image-palette Other Pages Prototype</title>
+    <style>
+      :root {
+        --paper: #f7f8fa;
+        --surface: #ffffff;
+        --surface-soft: #fbfcfd;
+        --ink: #17191b;
+        --muted: #707780;
+        --faint: #a5adb5;
+        --line: #dde2e7;
+        --line-strong: #cbd3da;
+        --selected: #edf2f5;
+        --selected-line: #d2dbe2;
+        --accent: #2f3842;
+        --accent-hover: #232b34;
+        --danger: #8f3d3d;
+        --radius: 5px;
+        --shadow-panel: 0 8px 22px rgba(22, 30, 38, 0.045);
+        --shadow-soft: 0 8px 22px rgba(22, 30, 38, 0.055), 0 1px 0 rgba(255, 255, 255, 0.82) inset;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "Noto Sans", Arial, sans-serif;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: var(--font);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        position: relative;
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        background: var(--paper);
+      }
+
+      body::before,
+      body::after {
+        content: "";
+        position: fixed;
+        z-index: -1;
+        border-radius: 999px;
+        filter: blur(34px);
+        opacity: 0.28;
+        pointer-events: none;
+      }
+
+      body::before {
+        width: 420px;
+        height: 220px;
+        right: 7vw;
+        top: 94px;
+        background: rgba(218, 225, 232, 0.82);
+      }
+
+      body::after {
+        width: 360px;
+        height: 180px;
+        left: 8vw;
+        bottom: 110px;
+        background: rgba(226, 232, 238, 0.72);
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        outline-color: var(--accent);
+        outline-offset: 2px;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        width: min(1280px, calc(100vw - 48px));
+        min-height: 100vh;
+        margin: 0 auto;
+        padding: 18px 0 36px;
+      }
+
+      .appbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 8px;
+        animation: rise-in 420ms ease both;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ink);
+        font-weight: 680;
+        letter-spacing: -0.02em;
+      }
+
+      .logo {
+        width: 26px;
+        height: 26px;
+        display: block;
+      }
+
+      .nav {
+        display: inline-flex;
+        gap: 4px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: rgba(255, 255, 255, 0.58);
+        box-shadow: var(--shadow-soft);
+        padding: 3px;
+        backdrop-filter: blur(22px) saturate(1.18);
+      }
+
+      .nav button {
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--muted);
+        min-width: 68px;
+        padding: 7px 12px;
+      }
+
+      .nav button:hover {
+        color: var(--ink);
+        background: var(--surface-soft);
+      }
+
+      .nav .active {
+        border-color: var(--selected-line);
+        background: var(--selected);
+        color: var(--ink);
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow-panel);
+        overflow: hidden;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        padding: 14px 16px;
+      }
+
+      .section-head h1,
+      .section-head h2 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 650;
+      }
+
+      .section-head span,
+      .label,
+      label span,
+      table th,
+      .subtle {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 16px 0 12px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        color: var(--ink);
+      }
+
+      input,
+      select {
+        min-height: 38px;
+        padding: 0 10px;
+      }
+
+      textarea {
+        min-height: 112px;
+        padding: 10px 11px;
+        line-height: 1.55;
+        resize: vertical;
+      }
+
+      .search {
+        width: min(360px, 45vw);
+      }
+
+      .primary,
+      .secondary,
+      .text-danger {
+        border-radius: var(--radius);
+        min-height: 34px;
+        padding: 0 12px;
+      }
+
+      .primary {
+        border: 1px solid var(--accent);
+        background: linear-gradient(180deg, #3d4650, var(--accent));
+        color: #fff;
+        font-weight: 620;
+        box-shadow: 0 8px 18px rgba(47, 56, 66, 0.18);
+      }
+
+      .secondary,
+      .text-danger {
+        border: 1px solid var(--line-strong);
+        background: var(--surface);
+        color: var(--ink);
+      }
+
+      .text-danger {
+        color: var(--danger);
+      }
+
+      .history-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .history-table th,
+      .history-table td {
+        border-top: 1px solid var(--line);
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: middle;
+        font-size: 13px;
+      }
+
+      .history-table thead th {
+        border-top: 0;
+        font-weight: 520;
+      }
+
+      .history-table tbody tr {
+        transition: background-color 150ms ease;
+      }
+
+      .history-table tbody tr:hover {
+        background: var(--surface-soft);
+      }
+
+      .thumb {
+        width: 72px;
+        aspect-ratio: 4 / 3;
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(36, 43, 48, 0.62), transparent 46%),
+          linear-gradient(45deg, rgba(75, 96, 104, 0.58), transparent 50%),
+          #d9dde0;
+        box-shadow: 0 6px 14px rgba(22, 30, 38, 0.08);
+        transition: transform 180ms ease, box-shadow 180ms ease;
+      }
+
+      tr:hover .thumb,
+      .palette-card:hover .palette-preview-art {
+        transform: perspective(700px) rotateX(2.4deg) translateY(-1px);
+        box-shadow: 0 14px 24px rgba(22, 30, 38, 0.18);
+      }
+
+      .prompt-cell {
+        max-width: 440px;
+        line-height: 1.4;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        white-space: nowrap;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 18px;
+        margin-top: 16px;
+      }
+
+      .split--settings {
+        grid-template-columns: minmax(420px, 0.95fr) minmax(300px, 0.65fr);
+      }
+
+      .palette-list {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+      }
+
+      .palette-card {
+        display: grid;
+        gap: 8px;
+        border: 1px solid transparent;
+        border-radius: var(--radius);
+        background: transparent;
+        padding: 10px;
+        text-align: left;
+        transition: background-color 150ms ease, border-color 150ms ease;
+      }
+
+      .palette-card.active {
+        border-color: var(--selected-line);
+        background: var(--selected);
+      }
+
+      .palette-card strong {
+        font-size: 13px;
+      }
+
+      .palette-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 210px;
+        gap: 16px;
+        align-items: stretch;
+        border-bottom: 1px solid var(--line);
+        padding: 16px;
+      }
+
+      .palette-poster {
+        position: relative;
+        min-height: 180px;
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, #0072b2 0 24%, transparent 24%),
+          linear-gradient(45deg, #009e73 0 32%, transparent 32%),
+          radial-gradient(circle at 70% 35%, #e69f00 0 10%, transparent 11%),
+          linear-gradient(150deg, #efefef, #ffffff);
+        box-shadow: 0 12px 28px rgba(22, 30, 38, 0.075);
+        overflow: hidden;
+      }
+
+      .palette-poster::after {
+        content: "";
+        position: absolute;
+        inset: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.62);
+        border-radius: var(--radius);
+      }
+
+      .palette-notes {
+        display: grid;
+        align-content: space-between;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: 12px;
+      }
+
+      .palette-notes h2 {
+        margin: 0 0 5px;
+        font-size: 16px;
+      }
+
+      .palette-preview-art,
+      .swatches {
+        display: flex;
+        gap: 5px;
+      }
+
+      .palette-preview-art i,
+      .swatches i {
+        flex: 1 1 0;
+        height: 10px;
+        border-radius: 3px;
+      }
+
+      .palette-preview-art i:nth-child(1),
+      .swatches i:nth-child(1) { background: #0072b2; }
+      .palette-preview-art i:nth-child(2),
+      .swatches i:nth-child(2) { background: #e69f00; }
+      .palette-preview-art i:nth-child(3),
+      .swatches i:nth-child(3) { background: #009e73; }
+      .palette-preview-art i:nth-child(4),
+      .swatches i:nth-child(4) { background: #222; }
+      .palette-preview-art i:nth-child(5),
+      .swatches i:nth-child(5) { background: #fff; border: 1px solid var(--line); }
+      .palette-preview-art i:nth-child(6),
+      .swatches i:nth-child(6) { background: #efefef; }
+      .palette-preview-art i:nth-child(7),
+      .swatches i:nth-child(7) { background: #b9b9b9; }
+      .palette-preview-art i:nth-child(8),
+      .swatches i:nth-child(8) { background: #d55e00; }
+
+      .editor-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .color-slot {
+        display: grid;
+        grid-template-columns: 1fr 42px 116px;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: 9px;
+      }
+
+      .color-box {
+        width: 42px;
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+
+      .settings-wrap {
+        margin-top: 16px;
+      }
+
+      .settings-form {
+        display: grid;
+        gap: 14px;
+      }
+
+      .connection-card {
+        display: grid;
+        gap: 12px;
+      }
+
+      .connection-meter {
+        min-height: 150px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          radial-gradient(circle at 72% 35%, rgba(47, 56, 66, 0.16) 0 13%, transparent 14%),
+          linear-gradient(135deg, rgba(75, 96, 104, 0.18), transparent 42%),
+          var(--surface-soft);
+        padding: 14px;
+      }
+
+      .connection-meter strong {
+        display: block;
+        margin-top: 6px;
+        font-size: 20px;
+      }
+
+      .info-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .status-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: 10px 12px;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      @keyframes rise-in {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .page > * {
+        animation: rise-in 420ms ease both;
+      }
+
+      .page + .page {
+        border-top: 1px solid var(--line);
+      }
+
+      @media (max-width: 900px) {
+        .split {
+          grid-template-columns: 1fr;
+        }
+
+        .history-table {
+          min-width: 880px;
+        }
+
+        .table-scroll {
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="page" id="history">
+      <header class="appbar">
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 32 32" role="img" aria-label="gpt-image-palette logo">
+            <rect x="5" y="4" width="19" height="24" rx="5" fill="#fff" stroke="#181817" stroke-width="1.4" />
+            <path d="M11 10h8M11 15h11M11 20h6" stroke="#181817" stroke-width="1.4" stroke-linecap="round" />
+            <circle cx="24" cy="22" r="5" fill="#2f3842" />
+            <circle cx="22.4" cy="20.8" r="1.2" fill="#f7f8fa" />
+            <circle cx="25.4" cy="22.6" r="1.1" fill="#d8c777" />
+          </svg>
+          <span>gpt-image-palette</span>
+        </div>
+        <nav class="nav" aria-label="主导航">
+          <button type="button">生成</button>
+          <button class="active" type="button">历史</button>
+          <button type="button">配色</button>
+          <button type="button">设置</button>
+        </nav>
+      </header>
+
+      <div class="toolbar">
+        <input class="search" value="" placeholder="搜索 prompt" />
+        <span class="subtle">共 48 张历史图片</span>
+      </div>
+
+      <section class="panel">
+        <div class="section-head">
+          <h1>历史</h1>
+          <span>点击缩略图查看详情，或带回生成页继续编辑</span>
+        </div>
+        <div class="table-scroll">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>图片</th>
+                <th>Prompt</th>
+                <th>尺寸</th>
+                <th>质量</th>
+                <th>配色</th>
+                <th>时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="thumb"></div></td>
+                <td class="prompt-cell">Clean academic figure showing a compact machine learning pipeline with restrained labels.</td>
+                <td>1536x1024</td>
+                <td>high</td>
+                <td>Okabe Ito</td>
+                <td>2026-04-25 00:42</td>
+                <td><div class="actions"><button class="secondary">带回生成页</button><button class="secondary">下载</button><button class="text-danger">删除</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="thumb"></div></td>
+                <td class="prompt-cell">Publication-ready contrastive learning diagram with three panels and precise arrows.</td>
+                <td>1024x1024</td>
+                <td>high</td>
+                <td>Journal Figure</td>
+                <td>2026-04-24 23:18</td>
+                <td><div class="actions"><button class="secondary">带回生成页</button><button class="secondary">下载</button><button class="text-danger">删除</button></div></td>
+              </tr>
+              <tr>
+                <td><div class="thumb"></div></td>
+                <td class="prompt-cell">Minimal scientific illustration for a dataset curation workflow.</td>
+                <td>1024x1536</td>
+                <td>medium</td>
+                <td>Okabe Ito</td>
+                <td>2026-04-24 21:06</td>
+                <td><div class="actions"><button class="secondary">带回生成页</button><button class="secondary">下载</button><button class="text-danger">删除</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="palettes">
+      <header class="appbar">
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 32 32" role="img" aria-label="gpt-image-palette logo">
+            <rect x="5" y="4" width="19" height="24" rx="5" fill="#fff" stroke="#181817" stroke-width="1.4" />
+            <path d="M11 10h8M11 15h11M11 20h6" stroke="#181817" stroke-width="1.4" stroke-linecap="round" />
+            <circle cx="24" cy="22" r="5" fill="#2f3842" />
+            <circle cx="22.4" cy="20.8" r="1.2" fill="#f7f8fa" />
+            <circle cx="25.4" cy="22.6" r="1.1" fill="#d8c777" />
+          </svg>
+          <span>gpt-image-palette</span>
+        </div>
+        <nav class="nav" aria-label="主导航">
+          <button type="button">生成</button>
+          <button type="button">历史</button>
+          <button class="active" type="button">配色</button>
+          <button type="button">设置</button>
+        </nav>
+      </header>
+
+      <div class="split">
+        <aside class="panel">
+          <div class="section-head">
+            <h1>配色</h1>
+            <button class="secondary">新建</button>
+          </div>
+          <div class="palette-list">
+            <button class="palette-card active">
+              <strong>Okabe Ito</strong>
+              <span class="subtle">预设 / 默认</span>
+              <span class="palette-preview-art"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            </button>
+            <button class="palette-card">
+              <strong>Journal Figure</strong>
+              <span class="subtle">自定义</span>
+              <span class="palette-preview-art"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            </button>
+            <button class="palette-card">
+              <strong>Cool Archive</strong>
+              <span class="subtle">自定义</span>
+              <span class="palette-preview-art"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            </button>
+          </div>
+        </aside>
+
+        <section class="panel">
+          <div class="section-head">
+            <h1>编辑配色</h1>
+            <span>固定 8 个语义色槽</span>
+          </div>
+          <div class="palette-hero">
+            <div class="palette-poster" aria-label="配色预览"></div>
+            <div class="palette-notes">
+              <div>
+                <span class="label">当前方案</span>
+                <h2>Okabe Ito</h2>
+                <span class="subtle">为科研图准备的高辨识度 8 色语义色板。</span>
+              </div>
+              <span class="swatches"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              <div class="button-row">
+                <button class="primary">保存配色</button>
+                <button class="secondary">设为默认</button>
+              </div>
+            </div>
+          </div>
+          <div class="content">
+            <div class="toolbar">
+              <label>
+                <span>名称</span>
+                <input value="Okabe Ito" />
+              </label>
+              <button class="secondary">复制为自定义</button>
+            </div>
+            <div class="editor-grid">
+              <div class="color-slot"><span class="label">primary</span><span class="color-box" style="background:#0072b2"></span><input value="#0072B2" /></div>
+              <div class="color-slot"><span class="label">secondary</span><span class="color-box" style="background:#e69f00"></span><input value="#E69F00" /></div>
+              <div class="color-slot"><span class="label">tertiary</span><span class="color-box" style="background:#009e73"></span><input value="#009E73" /></div>
+              <div class="color-slot"><span class="label">text</span><span class="color-box" style="background:#222"></span><input value="#222222" /></div>
+              <div class="color-slot"><span class="label">fill</span><span class="color-box" style="background:#fff"></span><input value="#FFFFFF" /></div>
+              <div class="color-slot"><span class="label">section_bg</span><span class="color-box" style="background:#efefef"></span><input value="#EFEFEF" /></div>
+              <div class="color-slot"><span class="label">border</span><span class="color-box" style="background:#b9b9b9"></span><input value="#B9B9B9" /></div>
+              <div class="color-slot"><span class="label">arrow</span><span class="color-box" style="background:#d55e00"></span><input value="#D55E00" /></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="page" id="settings">
+      <header class="appbar">
+        <div class="brand">
+          <svg class="logo" viewBox="0 0 32 32" role="img" aria-label="gpt-image-palette logo">
+            <rect x="5" y="4" width="19" height="24" rx="5" fill="#fff" stroke="#181817" stroke-width="1.4" />
+            <path d="M11 10h8M11 15h11M11 20h6" stroke="#181817" stroke-width="1.4" stroke-linecap="round" />
+            <circle cx="24" cy="22" r="5" fill="#2f3842" />
+            <circle cx="22.4" cy="20.8" r="1.2" fill="#f7f8fa" />
+            <circle cx="25.4" cy="22.6" r="1.1" fill="#d8c777" />
+          </svg>
+          <span>gpt-image-palette</span>
+        </div>
+        <nav class="nav" aria-label="主导航">
+          <button type="button">生成</button>
+          <button type="button">历史</button>
+          <button type="button">配色</button>
+          <button class="active" type="button">设置</button>
+        </nav>
+      </header>
+
+      <div class="split split--settings">
+        <section class="panel settings-wrap">
+          <div class="section-head">
+            <h1>设置</h1>
+            <span>保存图片生成服务连接信息</span>
+          </div>
+          <div class="content settings-form">
+            <label>
+              <span>baseURL</span>
+              <input value="https://api.example.com/v1" />
+            </label>
+            <label>
+              <span>API Key</span>
+              <input value="sk-****************************************" />
+            </label>
+            <div class="button-row">
+              <button class="primary">保存</button>
+              <button class="secondary">测试连接</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel settings-wrap">
+          <div class="section-head">
+            <h2>连接状态</h2>
+            <span>手动测试</span>
+          </div>
+          <div class="content connection-card">
+            <div class="connection-meter">
+              <span class="label">当前状态</span>
+              <strong>连接成功</strong>
+              <p class="subtle">上次测试：2026-04-25 00:56</p>
+            </div>
+            <div class="info-list">
+              <div class="status-line">
+                <span class="subtle">配置来源</span>
+                <strong>后端本地存储</strong>
+              </div>
+              <div class="status-line">
+                <span class="subtle">可见范围</span>
+                <strong>仅本机</strong>
+              </div>
+              <div class="status-line">
+                <span class="subtle">生产部署</span>
+                <strong>Fastify 单服务</strong>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </body>
+</html>

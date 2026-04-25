@@ -11,7 +11,7 @@ VALUES (1, '', '', CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS workspace_state (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   prompt TEXT NOT NULL DEFAULT '',
-  size TEXT NOT NULL DEFAULT '1024x1024',
+  size TEXT NOT NULL DEFAULT 'auto',
   quality TEXT NOT NULL DEFAULT 'high',
   color_scheme_id TEXT NOT NULL DEFAULT 'preset-okabe-ito',
   custom_colors_json TEXT,
@@ -35,7 +35,7 @@ INSERT OR IGNORE INTO workspace_state (
   reference_image_mime_type,
   updated_at
 )
-VALUES (1, '', '1024x1024', 'high', 'preset-okabe-ito', NULL, 1, NULL, NULL, NULL, CURRENT_TIMESTAMP);
+VALUES (1, '', 'auto', 'high', 'preset-okabe-ito', NULL, 1, NULL, NULL, NULL, CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS custom_color_schemes (
   id TEXT PRIMARY KEY,

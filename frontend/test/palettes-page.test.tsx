@@ -44,5 +44,17 @@ describe('PalettesPage', () => {
     }
     expect(html).toContain('设为默认');
     expect(html).toContain('保存配色');
+    expect(html).toContain('class="palette-page split-page"');
+    expect(html).toContain('class="palette-card palette-card--active"');
+    expect(html).toContain('class="palette-hero"');
+    expect(html).toContain('palette-poster');
+    expect(html).toContain('自定义方案');
+    expect(html).toContain('当前方案');
+    expect(html).toContain('palette-swatches');
+    expect(html).toContain('class="palette-workbench"');
+    expect(html).toContain('class="palette-summary-card"');
+    expect(html).toContain('class="palette-actions-card"');
+    expect(html).toMatch(/class="palette-summary-card"[\s\S]*class="palette-actions-card"/);
+    expect(html).toContain('class="color-slot-list"');
   });
 });
