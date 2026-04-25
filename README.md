@@ -22,6 +22,13 @@ GPT Image Palette is a local image-generation workspace for `gpt-image-2` compat
 
 ## Development
 
+Clone the repository:
+
+```bash
+git clone --recurse-submodules https://github.com/mkaros2025/gpt-image-palette.git
+cd gpt-image-palette
+```
+
 Install dependencies:
 
 ```bash
@@ -50,6 +57,14 @@ Then open the Settings page and fill in your API base URL and API key.
 
 ## Production Deployment
 
+Clone and install:
+
+```bash
+git clone --recurse-submodules https://github.com/mkaros2025/gpt-image-palette.git
+cd gpt-image-palette
+npm install
+```
+
 Build the app:
 
 ```bash
@@ -63,6 +78,12 @@ npm run start
 ```
 
 In production, the backend serves both the API and the built frontend.
+
+Open:
+
+```text
+http://127.0.0.1:43175
+```
 
 ## Configuration
 
@@ -103,7 +124,7 @@ The bundled prompt template library is sourced from:
 
 - [awesome-gpt-image-2-prompts](https://github.com/EvoLinkAI/awesome-gpt-image-2-prompts)
 
-It is imported into this repository with `git subtree`.
+It is tracked as a Git submodule for upstream updates.
 
 ## License
 

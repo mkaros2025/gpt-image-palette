@@ -22,6 +22,13 @@ GPT Image Palette 是一个本地图片生成工作台，适用于兼容 `gpt-im
 
 ## 开发运行
 
+克隆仓库：
+
+```bash
+git clone --recurse-submodules https://github.com/mkaros2025/gpt-image-palette.git
+cd gpt-image-palette
+```
+
 安装依赖：
 
 ```bash
@@ -50,6 +57,14 @@ http://127.0.0.1:43175
 
 ## 生产部署
 
+克隆并安装：
+
+```bash
+git clone --recurse-submodules https://github.com/mkaros2025/gpt-image-palette.git
+cd gpt-image-palette
+npm install
+```
+
 构建应用：
 
 ```bash
@@ -63,6 +78,12 @@ npm run start
 ```
 
 生产模式下，后端会同时提供 API 和构建后的前端页面。
+
+打开：
+
+```text
+http://127.0.0.1:43175
+```
 
 ## 配置
 
@@ -103,7 +124,7 @@ npm run update:prompt-templates  # 更新内置 prompt 模板库
 
 - [awesome-gpt-image-2-prompts](https://github.com/EvoLinkAI/awesome-gpt-image-2-prompts)
 
-该模板库通过 `git subtree` 引入到本仓库。
+该模板库通过 Git submodule 跟踪上游更新。
 
 ## License
 
