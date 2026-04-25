@@ -20,7 +20,7 @@ GPT Image Palette is a local image-generation workspace for `gpt-image-2` compat
 - npm
 - A compatible image API key
 
-## Run Locally
+## Run
 
 Clone the repository:
 
@@ -42,17 +42,7 @@ npm run build
 npm run start
 ```
 
-Open:
-
-```text
-http://127.0.0.1:43175
-```
-
-Then open the Settings page and save your API base URL and API key into `.env`.
-
-## Configuration
-
-You can copy the example environment file:
+If needed, create a `.env` file first:
 
 ```bash
 cp .env.example .env
@@ -63,10 +53,18 @@ Default values:
 ```dotenv
 HOST=127.0.0.1
 PORT=43175
-DATA_DIR=./backend/data
+DATA_DIR=./data
 IMAGE_API_BASE_URL=
 IMAGE_API_KEY=
 ```
+
+Open:
+
+```text
+http://127.0.0.1:43175
+```
+
+Then open the Settings page and save your API base URL and API key into `.env`.
 
 Runtime data, uploaded reference images, and generated images are stored under `DATA_DIR`.
 

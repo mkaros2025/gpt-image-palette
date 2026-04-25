@@ -20,7 +20,7 @@ GPT Image Palette 是一个本地图片生成工作台，适用于兼容 `gpt-im
 - npm
 - 一个可用的图片 API Key
 
-## 本地运行
+## 运行
 
 克隆仓库：
 
@@ -42,17 +42,7 @@ npm run build
 npm run start
 ```
 
-打开：
-
-```text
-http://127.0.0.1:43175
-```
-
-进入应用后，打开设置页，把 API base URL 和 API Key 保存到 `.env`。
-
-## 配置
-
-可以复制环境变量示例：
+如有需要，可以先创建 `.env`：
 
 ```bash
 cp .env.example .env
@@ -63,10 +53,18 @@ cp .env.example .env
 ```dotenv
 HOST=127.0.0.1
 PORT=43175
-DATA_DIR=./backend/data
+DATA_DIR=./data
 IMAGE_API_BASE_URL=
 IMAGE_API_KEY=
 ```
+
+打开：
+
+```text
+http://127.0.0.1:43175
+```
+
+进入应用后，打开设置页，把 API base URL 和 API Key 保存到 `.env`。
 
 运行数据、上传的参考图和生成图片会保存在 `DATA_DIR` 下。
 
