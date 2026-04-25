@@ -23,7 +23,7 @@ export function App() {
     }
     return normalizePageId(window.location.hash.replace('#/', ''));
   });
-  const [settings, setSettings] = useState<Settings>({ baseUrl: '', apiKey: '', updatedAt: '' });
+  const [settings, setSettings] = useState<Settings>({ baseUrl: '', apiKey: '' });
   const [workspace, setWorkspace] = useState<Workspace>(DEFAULT_WORKSPACE);
   const [palettes, setPalettes] = useState<ColorScheme[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);

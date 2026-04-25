@@ -17,7 +17,7 @@ export function SettingsPage({ settings, status, onSettingsChange, onSave, onTes
       }}>
         <div className="section-head">
           <h1>设置</h1>
-          <span>保存图片生成服务连接信息</span>
+          <span>保存图片生成服务连接信息到 .env</span>
         </div>
         <div className="settings-form-body">
           <label className="field field--stacked">
@@ -30,7 +30,7 @@ export function SettingsPage({ settings, status, onSettingsChange, onSave, onTes
           </label>
           {status ? <p className="inline-status">{status}</p> : null}
           <div className="button-row">
-            <button className="primary-button" type="submit">保存</button>
+            <button className="primary-button" type="submit">保存到 .env</button>
             <button className="quiet-button" type="button" onClick={() => void onTestConnection()}>测试连接</button>
           </div>
         </div>

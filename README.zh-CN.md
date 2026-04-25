@@ -12,7 +12,7 @@ GPT Image Palette 是一个本地图片生成工作台，适用于兼容 `gpt-im
 - 选择图片尺寸、质量、生成数量和可选配色方案。
 - 预览最新生成结果，并查看最近生成图片。
 - 在历史页搜索、查看详情、下载、删除图片，也可以把历史记录带回生成页继续编辑。
-- 在设置页保存 API base URL 和 API Key。
+- 在设置页把 API base URL 和 API Key 保存到 `.env`。
 
 ## 环境要求
 
@@ -48,7 +48,7 @@ npm run start
 http://127.0.0.1:43175
 ```
 
-进入应用后，打开设置页，填写 API base URL 和 API Key。
+进入应用后，打开设置页，把 API base URL 和 API Key 保存到 `.env`。
 
 ## 配置
 
@@ -64,6 +64,8 @@ cp .env.example .env
 HOST=127.0.0.1
 PORT=43175
 DATA_DIR=./backend/data
+IMAGE_API_BASE_URL=
+IMAGE_API_KEY=
 ```
 
 运行数据、上传的参考图和生成图片会保存在 `DATA_DIR` 下。

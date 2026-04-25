@@ -1,39 +1,18 @@
-import type { SqliteDatabase } from '../db/client.js';
+import { readImageApiEnv, writeImageApiEnv } from '../config/envFile.js';
 
 export type AppSettings = {
   baseUrl: string;
   apiKey: string;
-  updatedAt: string;
 };
 
-type SettingsRow = {
-  baseUrl: string;
-  apiKey: string;
-  updatedAt: string;
-};
+export type SettingsRepo = ReturnType<typeof createSettingsRepo>;
 
-export function createSettingsRepo(db: SqliteDatabase) {
-  const getStatement = db.prepare(
-    `SELECT base_url AS baseUrl, api_key AS apiKey, updated_at AS updatedAt
-     FROM app_settings
-     WHERE id = 1`,
-  );
-  const upsertStatement = db.prepare(
-    `INSERT INTO app_settings (id, base_url, api_key, updated_at)
-     VALUES (1, @baseUrl, @apiKey, CURRENT_TIMESTAMP)
-     ON CONFLICT(id) DO UPDATE SET
-       base_url = excluded.base_url,
-       api_key = excluded.api_key,
-       updated_at = CURRENT_TIMESTAMP`,
-  );
-
+export function createSettingsRepo(options: { envFilePath?: string } = {}) {
   function getSettings(): AppSettings {
-    const row = getStatement.get() as SettingsRow | undefined;
     return (
-      row ?? {
+      readImageApiEnv(options.envFilePath) ?? {
         baseUrl: '',
         apiKey: '',
-        updatedAt: '',
       }
     );
   }
@@ -41,7 +20,7 @@ export function createSettingsRepo(db: SqliteDatabase) {
   return {
     getSettings,
     saveSettings(input: { baseUrl: string; apiKey: string }): AppSettings {
-      upsertStatement.run(input);
+      writeImageApiEnv(input, options.envFilePath);
       return getSettings();
     },
   };

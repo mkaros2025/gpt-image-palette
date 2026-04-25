@@ -19,6 +19,7 @@ import { registerWorkspaceRoutes } from './routes/workspace.js';
 
 export type BuildAppOptions = {
   dataDir: string;
+  envFilePath?: string;
   staticDir?: string;
   logger?: boolean;
   gateway?: GatewayClient;
@@ -27,7 +28,7 @@ export type BuildAppOptions = {
 export async function buildApp(options: BuildAppOptions): Promise<FastifyInstance> {
   const db = openDatabase(options.dataDir);
   const fileStore = createFileStore(options.dataDir);
-  const settingsRepo = createSettingsRepo(db);
+  const settingsRepo = createSettingsRepo({ envFilePath: options.envFilePath });
   const workspaceRepo = createWorkspaceRepo(db);
   const historyRepo = createSqliteHistoryRepo(db);
   const gateway = options.gateway ?? createGatewayClient();
@@ -68,7 +69,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     db.close();
   });
 
-  registerSettingsRoutes(app, db, gateway);
+  registerSettingsRoutes(app, settingsRepo, gateway);
   registerWorkspaceRoutes(app, db, fileStore);
   registerColorSchemeRoutes(app, db);
   registerGenerationRoutes(app, generationService, historyRepo);

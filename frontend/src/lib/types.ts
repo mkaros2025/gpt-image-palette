@@ -1,7 +1,6 @@
 export type Settings = {
   baseUrl: string;
   apiKey: string;
-  updatedAt: string;
 };
 
 export type PaletteColors = {

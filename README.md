@@ -12,7 +12,7 @@ GPT Image Palette is a local image-generation workspace for `gpt-image-2` compat
 - Choose image size, quality, output count, and optional color palettes.
 - Preview the latest result and review recent outputs.
 - Manage generated image history with search, detail view, download, delete, and reuse.
-- Save your API base URL and API key in the settings page.
+- Save your API base URL and API key from the settings page into `.env`.
 
 ## Requirements
 
@@ -48,7 +48,7 @@ Open:
 http://127.0.0.1:43175
 ```
 
-Then open the Settings page and fill in your API base URL and API key.
+Then open the Settings page and save your API base URL and API key into `.env`.
 
 ## Configuration
 
@@ -64,6 +64,8 @@ Default values:
 HOST=127.0.0.1
 PORT=43175
 DATA_DIR=./backend/data
+IMAGE_API_BASE_URL=
+IMAGE_API_KEY=
 ```
 
 Runtime data, uploaded reference images, and generated images are stored under `DATA_DIR`.

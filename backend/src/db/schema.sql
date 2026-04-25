@@ -1,13 +1,3 @@
-CREATE TABLE IF NOT EXISTS app_settings (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
-  base_url TEXT NOT NULL DEFAULT '',
-  api_key TEXT NOT NULL DEFAULT '',
-  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT OR IGNORE INTO app_settings (id, base_url, api_key, updated_at)
-VALUES (1, '', '', CURRENT_TIMESTAMP);
-
 CREATE TABLE IF NOT EXISTS workspace_state (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   prompt TEXT NOT NULL DEFAULT '',

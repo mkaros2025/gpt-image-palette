@@ -69,7 +69,7 @@ describe('GeneratePage', () => {
   it('renders the studio shell with a composer sidebar, canvas stage, and filmstrip', () => {
     const html = renderToStaticMarkup(
       <GeneratePage
-        settings={{ baseUrl: '', apiKey: '', updatedAt: '' }}
+        settings={{ baseUrl: '', apiKey: '' }}
         workspace={DEFAULT_WORKSPACE}
         palettes={[palette]}
         activeJobs={activeJobs}
@@ -132,7 +132,7 @@ describe('GeneratePage', () => {
       act(() => {
         root.render(
           <GeneratePage
-            settings={{ baseUrl: 'https://img.aiapis.help/', apiKey: 'sk-test', updatedAt: '' }}
+            settings={{ baseUrl: 'https://img.aiapis.help/', apiKey: 'sk-test' }}
             workspace={DEFAULT_WORKSPACE}
             palettes={[palette]}
             activeJobs={[]}
@@ -170,7 +170,7 @@ describe('GeneratePage', () => {
   it('renders multiple uploaded reference images with indexed remove actions', () => {
     const html = renderToStaticMarkup(
       <GeneratePage
-        settings={{ baseUrl: 'https://img.aiapis.help/', apiKey: 'sk-test', updatedAt: '' }}
+        settings={{ baseUrl: 'https://img.aiapis.help/', apiKey: 'sk-test' }}
         workspace={{
           ...DEFAULT_WORKSPACE,
           referenceImages: [
@@ -201,7 +201,7 @@ describe('GeneratePage', () => {
   it('renders a restrained empty gallery state when there are no generated images yet', () => {
     const html = renderToStaticMarkup(
       <GeneratePage
-        settings={{ baseUrl: '', apiKey: '', updatedAt: '' }}
+        settings={{ baseUrl: '', apiKey: '' }}
         workspace={DEFAULT_WORKSPACE}
         palettes={[palette]}
         activeJobs={[]}
@@ -233,7 +233,7 @@ describe('GeneratePage', () => {
     };
     const html = renderToStaticMarkup(
       <GeneratePage
-        settings={{ baseUrl: 'https://img.aiapis.help/', apiKey: 'sk-test', updatedAt: '' }}
+        settings={{ baseUrl: 'https://img.aiapis.help/', apiKey: 'sk-test' }}
         workspace={DEFAULT_WORKSPACE}
         palettes={[palette]}
         activeJobs={[]}
@@ -256,7 +256,7 @@ describe('GeneratePage', () => {
   it('clears the right-side preview while a new generation is in flight', () => {
     const html = renderToStaticMarkup(
       <GeneratePage
-        settings={{ baseUrl: 'https://img.aiapis.help/', apiKey: 'sk-test', updatedAt: '' }}
+        settings={{ baseUrl: 'https://img.aiapis.help/', apiKey: 'sk-test' }}
         workspace={DEFAULT_WORKSPACE}
         palettes={[palette]}
         activeJobs={[]}

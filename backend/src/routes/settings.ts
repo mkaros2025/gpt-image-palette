@@ -1,8 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
-import type { SqliteDatabase } from '../db/client.js';
-import { createSettingsRepo } from '../repositories/settingsRepo.js';
+import type { SettingsRepo } from '../repositories/settingsRepo.js';
 import type { GatewayClient } from '../services/gatewayClient.js';
 
 const settingsSchema = z.object({
@@ -10,9 +9,7 @@ const settingsSchema = z.object({
   apiKey: z.string().trim().min(1),
 });
 
-export function registerSettingsRoutes(app: FastifyInstance, db: SqliteDatabase, gateway: GatewayClient) {
-  const repo = createSettingsRepo(db);
-
+export function registerSettingsRoutes(app: FastifyInstance, repo: SettingsRepo, gateway: GatewayClient) {
   app.get('/api/settings', async () => repo.getSettings());
 
   app.put('/api/settings', async (request, reply) => {

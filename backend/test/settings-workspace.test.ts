@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
@@ -9,8 +9,9 @@ import { buildApp } from '../src/app';
 describe('settings + workspace persistence', () => {
   it('persists gateway settings and draft state across restarts', async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'workbench-'));
+    const envFilePath = join(dataDir, '.env');
 
-    const first = await buildApp({ dataDir });
+    const first = await buildApp({ dataDir, envFilePath });
     await first.inject({
       method: 'PUT',
       url: '/api/settings',
@@ -30,7 +31,11 @@ describe('settings + workspace persistence', () => {
     });
     await first.close();
 
-    const second = await buildApp({ dataDir });
+    const envFile = readFileSync(envFilePath, 'utf8');
+    expect(envFile).toContain('IMAGE_API_BASE_URL=http://127.0.0.1:8080');
+    expect(envFile).toContain('IMAGE_API_KEY=sk-test');
+
+    const second = await buildApp({ dataDir, envFilePath });
     const settings = await second.inject({ method: 'GET', url: '/api/settings' });
     const workspace = await second.inject({ method: 'GET', url: '/api/workspace' });
 
@@ -99,6 +104,61 @@ describe('settings + workspace persistence', () => {
     expect(workspace.json()).toMatchObject({
       prompt: 'old prompt',
       referenceImages: [],
+    });
+
+    await app.close();
+  });
+
+  it('ignores legacy database settings when the env file is missing', async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), 'workbench-db-settings-ignored-'));
+    const envFilePath = join(dataDir, '.env');
+    const db = new Database(join(dataDir, 'app.db'));
+    db.exec(`
+      CREATE TABLE app_settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        base_url TEXT NOT NULL DEFAULT '',
+        api_key TEXT NOT NULL DEFAULT '',
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      INSERT INTO app_settings (id, base_url, api_key, updated_at)
+      VALUES (1, 'http://legacy.example', 'sk-legacy', CURRENT_TIMESTAMP);
+    `);
+    db.close();
+
+    const app = await buildApp({ dataDir, envFilePath });
+    const settings = await app.inject({ method: 'GET', url: '/api/settings' });
+
+    expect(settings.json()).toMatchObject({
+      baseUrl: '',
+      apiKey: '',
+    });
+
+    await app.close();
+  });
+
+  it('reads API settings from the env file', async () => {
+    const dataDir = mkdtempSync(join(tmpdir(), 'workbench-env-settings-'));
+    const envFilePath = join(dataDir, '.env');
+    const db = new Database(join(dataDir, 'app.db'));
+    db.exec(`
+      CREATE TABLE app_settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        base_url TEXT NOT NULL DEFAULT '',
+        api_key TEXT NOT NULL DEFAULT '',
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+      INSERT INTO app_settings (id, base_url, api_key, updated_at)
+      VALUES (1, 'http://legacy.example', 'sk-legacy', CURRENT_TIMESTAMP);
+    `);
+    db.close();
+    writeFileSync(envFilePath, 'IMAGE_API_BASE_URL=http://env.example\nIMAGE_API_KEY=sk-env\n');
+
+    const app = await buildApp({ dataDir, envFilePath });
+    const settings = await app.inject({ method: 'GET', url: '/api/settings' });
+
+    expect(settings.json()).toMatchObject({
+      baseUrl: 'http://env.example',
+      apiKey: 'sk-env',
     });
 
     await app.close();
