@@ -16,7 +16,7 @@ GPT Image Palette 是一个本地图片生成工作台，适用于兼容 `gpt-im
 
 ## 环境要求
 
-- Node.js 22 或更高版本
+- Node.js 22.12 或更高版本
 - npm
 - 一个可用的图片 API Key
 
@@ -32,8 +32,11 @@ cd gpt-image-palette
 安装依赖：
 
 ```bash
+nvm use
 npm install
 ```
+
+仓库会提交 `package-lock.json`，这是有意为之。不要提交 `node_modules/`，也不要把一台机器上的 `node_modules/` 目录拷到另一台机器复用。
 
 构建并启动应用：
 
@@ -67,6 +70,15 @@ http://127.0.0.1:43175
 进入应用后，打开设置页，把 API base URL 和 API Key 保存到 `.env`。
 
 运行数据、上传的参考图和生成图片会保存在 `DATA_DIR` 下。
+
+## 故障排查
+
+如果 `npm install` 或 `npm run dev` 报缺少平台包，例如 `@rollup/rollup-darwin-arm64`，请用仓库约定的 Node/npm 版本重建依赖和锁文件：
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
 
 ## 致谢
 

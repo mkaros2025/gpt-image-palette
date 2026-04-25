@@ -11,13 +11,14 @@
     "dev": "concurrently -n backend,frontend -c cyan,magenta \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w backend && npm run build -w frontend",
     "start": "npm run start -w backend",
-    "test": "npm run test -w backend && npm run test -w frontend",
+    "test": "node --test test/package-lock-platforms.test.mjs && npm run test -w backend && npm run test -w frontend",
     "update:prompt-templates": "bash scripts/update-prompt-templates.sh"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
   },
+  "packageManager": "npm@11.10.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12.0"
   }
 }

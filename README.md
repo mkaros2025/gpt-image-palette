@@ -16,7 +16,7 @@ GPT Image Palette is a local image-generation workspace for `gpt-image-2` compat
 
 ## Requirements
 
-- Node.js 22 or newer
+- Node.js 22.12 or newer
 - npm
 - A compatible image API key
 
@@ -32,8 +32,11 @@ cd gpt-image-palette
 Install dependencies:
 
 ```bash
+nvm use
 npm install
 ```
+
+`package-lock.json` is committed on purpose. Do not commit `node_modules/`, and do not copy one machine's `node_modules/` directory to another machine.
 
 Build and start the app:
 
@@ -67,6 +70,15 @@ http://127.0.0.1:43175
 Then open the Settings page and save your API base URL and API key into `.env`.
 
 Runtime data, uploaded reference images, and generated images are stored under `DATA_DIR`.
+
+## Troubleshooting
+
+If `npm install` or `npm run dev` fails with a missing platform package such as `@rollup/rollup-darwin-arm64`, rebuild the lockfile and dependencies with the repo's Node/npm version:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
 
 ## Acknowledgements
 

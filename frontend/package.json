@@ -22,5 +22,8 @@
     "@types/react-dom": "^19.2.3",
     "jsdom": "^27.2.0",
     "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
