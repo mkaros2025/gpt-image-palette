@@ -47,7 +47,7 @@ const historyItems = Array.from({ length: 13 }, (_, index) => ({
 }));
 
 describe('GeneratePage', () => {
-  it('renders the confirmed left input column, right latest result column, and bottom gallery', () => {
+  it('renders the studio shell with a composer sidebar, canvas stage, and filmstrip', () => {
     const html = renderToStaticMarkup(
       <GeneratePage
         settings={{ baseUrl: '', apiKey: '', updatedAt: '' }}
@@ -70,9 +70,12 @@ describe('GeneratePage', () => {
     expect(html).toContain('当前任务');
     expect(html).toContain('最近结果');
     expect(html).toContain('去设置');
-    expect(html).toContain('class="generate-layout"');
-    expect(html).toContain('class="panel panel--input gallery-panel"');
-    expect(html).toContain('class="panel panel--preview gallery-panel"');
+    expect(html).toContain('class="generate-studio"');
+    expect(html).toContain('class="studio-composer"');
+    expect(html).toContain('class="studio-canvas"');
+    expect(html).toContain('class="canvas-stage"');
+    expect(html).toContain('class="canvas-meta-bar"');
+    expect(html).toContain('class="studio-filmstrip"');
     expect(html).toContain('class="palette-preview-row generate-compact-surface"');
     expect(html).toContain('配色预览');
     expect(html).toContain('auto');
@@ -89,6 +92,7 @@ describe('GeneratePage', () => {
     expect(html).not.toContain('2560 x 1440');
     expect(html).not.toContain('4096 x 4096');
     expect(html).toContain('data-horizontal-wheel="true"');
+    expect(html).toContain('aria-label="最近结果 filmstrip"');
     expect(html).toContain('aria-label="查看 prompt 0 的生成详情"');
     expect((html.match(/class="gallery-thumb"/g) ?? []).length).toBe(12);
     expect(html).not.toContain('prompt 12');
@@ -113,7 +117,7 @@ describe('GeneratePage', () => {
       />,
     );
 
-    expect(html).toContain('class="latest-empty-state"');
+    expect(html).toContain('class="canvas-empty-state"');
     expect(html).toContain('class="gallery-empty-state"');
     expect(html).not.toContain('gallery-thumb--placeholder');
   });

@@ -322,29 +322,42 @@ textarea:disabled {
 
 .generate-page {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
-.generate-layout {
+.generate-studio {
   display: grid;
-  grid-template-columns: minmax(350px, 0.76fr) minmax(0, 1.24fr);
-  gap: 18px;
+  grid-template-columns: minmax(340px, 380px) minmax(0, 1fr);
+  gap: 16px;
   align-items: stretch;
+  min-height: 650px;
 }
 
-.panel--input {
+.studio-composer {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 650px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-panel);
   padding: 16px;
+  overflow: hidden;
   animation: rise-in 480ms 70ms ease both;
 }
 
-.panel--preview {
+.studio-canvas {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: 14px;
-  padding: 16px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  min-height: 650px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-panel);
+  padding: 14px;
+  overflow: hidden;
   animation: rise-in 480ms 130ms ease both;
 }
 
@@ -356,7 +369,7 @@ textarea:disabled {
 }
 
 .prompt-input {
-  min-height: 238px;
+  min-height: 188px;
   resize: vertical;
 }
 
@@ -489,12 +502,21 @@ textarea:disabled {
   padding: 10px 12px;
 }
 
-.latest-frame {
+.latest-frame,
+.canvas-stage {
   display: grid;
   min-height: 0;
 }
 
-.latest-image {
+.canvas-stage {
+  border: 1px dashed rgba(203, 211, 218, 0.86);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.latest-image,
+.canvas-image {
   display: block;
   width: 100%;
   height: 100%;
@@ -504,7 +526,12 @@ textarea:disabled {
   object-fit: contain;
 }
 
-.latest-empty-state {
+.canvas-image {
+  background: #eef1f4;
+}
+
+.latest-empty-state,
+.canvas-empty-state {
   display: grid;
   place-items: center;
   align-content: center;
@@ -519,20 +546,29 @@ textarea:disabled {
   text-align: center;
 }
 
-.latest-empty-state span {
+.canvas-empty-state {
+  border: 0;
+  min-height: 0;
+  background: linear-gradient(180deg, rgba(251, 252, 253, 0.72), rgba(255, 255, 255, 0.36));
+}
+
+.latest-empty-state span,
+.canvas-empty-state span {
   color: var(--ink);
   font-size: 15px;
   font-weight: 650;
 }
 
-.latest-empty-state p {
+.latest-empty-state p,
+.canvas-empty-state p {
   max-width: 240px;
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
 }
 
-.latest-meta {
+.latest-meta,
+.canvas-meta-bar {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
@@ -541,14 +577,16 @@ textarea:disabled {
   overflow: hidden;
 }
 
-.latest-meta div {
+.latest-meta div,
+.canvas-meta-bar div {
   display: grid;
   gap: 4px;
   background: var(--surface-soft);
   padding: 10px;
 }
 
-.recent-gallery {
+.recent-gallery,
+.studio-filmstrip {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.58);
@@ -556,6 +594,11 @@ textarea:disabled {
   padding: 14px;
   animation: rise-in 500ms 170ms ease both;
   backdrop-filter: blur(18px) saturate(1.08);
+}
+
+.studio-filmstrip {
+  padding: 12px 14px 10px;
+  box-shadow: var(--shadow-panel);
 }
 
 .gallery-header {
@@ -575,6 +618,16 @@ textarea:disabled {
   overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   padding: 2px 2px 14px;
+}
+
+.studio-filmstrip .gallery-strip {
+  grid-auto-columns: minmax(128px, 160px);
+  padding-bottom: 10px;
+}
+
+.studio-filmstrip .gallery-empty-state {
+  min-width: min(420px, calc(100vw - 64px));
+  min-height: 118px;
 }
 
 .gallery-thumb {
@@ -1087,12 +1140,19 @@ textarea:disabled {
 }
 
 @media (max-width: 940px) {
+  .generate-studio,
   .generate-layout,
   .split-page,
   .palette-hero,
   .palette-editor-body,
   .detail-card {
     grid-template-columns: 1fr;
+  }
+
+  .generate-studio,
+  .studio-composer,
+  .studio-canvas {
+    min-height: auto;
   }
 
   .gallery-panel,
@@ -1103,6 +1163,11 @@ textarea:disabled {
 
   .latest-image {
     min-height: 360px;
+  }
+
+  .canvas-image,
+  .canvas-empty-state {
+    min-height: 420px;
   }
 
   .detail-body {
@@ -1132,7 +1197,8 @@ textarea:disabled {
   .control-grid,
   .color-slot-list,
   .color-slot-grid,
-  .latest-meta {
+  .latest-meta,
+  .canvas-meta-bar {
     grid-template-columns: 1fr;
   }
 

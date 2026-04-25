@@ -37,9 +37,9 @@ export function GeneratePage(props: Props) {
 
   return (
     <div className="generate-page">
-      <section className="generate-layout">
+      <section className="generate-studio">
         <form
-          className="panel panel--input gallery-panel"
+          className="studio-composer"
           onSubmit={(event) => {
             event.preventDefault();
             void props.onGenerate();
@@ -133,22 +133,22 @@ export function GeneratePage(props: Props) {
           </div>
         </form>
 
-        <aside className="panel panel--preview gallery-panel">
+        <aside className="studio-canvas">
           <div className="status-row">
             <span className="label">当前任务</span>
             <strong>{props.activeJobs.length ? `${props.activeJobs.length} 个任务进行中` : '暂无任务'}</strong>
           </div>
-          <div className="latest-frame">
+          <div className="canvas-stage">
             {latest?.previewUrl ? (
-              <img className="latest-image" src={latest.previewUrl} alt="" />
+              <img className="canvas-image" src={latest.previewUrl} alt="" />
             ) : (
-              <div className="latest-empty-state">
+              <div className="canvas-empty-state">
                 <span>暂无图片</span>
                 <p>生成后会在这里显示最近一次请求的结果。</p>
               </div>
             )}
           </div>
-          <div className="latest-meta">
+          <div className="canvas-meta-bar">
             <div><span>尺寸</span><strong>{latest?.size ?? props.workspace.size}</strong></div>
             <div><span>质量</span><strong>{latest?.quality ?? props.workspace.quality}</strong></div>
             <div><span>配色</span><strong>{latest ? getPaletteLabel(props.palettes, latest.colorSchemeId) : selectedPalette?.name ?? '无配色'}</strong></div>
@@ -156,7 +156,7 @@ export function GeneratePage(props: Props) {
         </aside>
       </section>
 
-      <section className="recent-gallery" aria-label="最近结果">
+      <section className="studio-filmstrip" aria-label="最近结果 filmstrip">
         <div className="gallery-header">
           <h2>最近结果</h2>
           <span className="label">点击图片查看 prompt、分辨率、质量、配色、时间</span>

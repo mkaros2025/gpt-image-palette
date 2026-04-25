@@ -23,6 +23,16 @@ describe('prototype style contract', () => {
     expect(css).toContain('.settings-form');
   });
 
+  it('contains the studio shell classes for the generate workspace', () => {
+    expect(css).toContain('.generate-studio');
+    expect(css).toContain('grid-template-columns: minmax(340px, 380px) minmax(0, 1fr)');
+    expect(css).toContain('.studio-composer');
+    expect(css).toContain('.studio-canvas');
+    expect(css).toContain('.canvas-stage');
+    expect(css).toContain('.canvas-meta-bar');
+    expect(css).toContain('.studio-filmstrip');
+  });
+
   it('keeps the workbench quiet without decorative background or CTA gradients', () => {
     expect(css).not.toContain('body::before');
     expect(css).not.toContain('body::after');
