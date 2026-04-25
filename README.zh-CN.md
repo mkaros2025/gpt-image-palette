@@ -20,7 +20,7 @@ GPT Image Palette 是一个本地图片生成工作台，适用于兼容 `gpt-im
 - npm
 - 一个可用的图片 API Key
 
-## 开发运行
+## 本地运行
 
 克隆仓库：
 
@@ -35,55 +35,20 @@ cd gpt-image-palette
 npm install
 ```
 
-启动应用：
+构建并启动应用：
 
 ```bash
-npm run dev
+npm run build
+npm run start
 ```
 
 打开：
-
-```text
-http://127.0.0.1:43174
-```
-
-后端默认运行在：
 
 ```text
 http://127.0.0.1:43175
 ```
 
 进入应用后，打开设置页，填写 API base URL 和 API Key。
-
-## 生产部署
-
-克隆并安装：
-
-```bash
-git clone --recurse-submodules https://github.com/mkaros2025/gpt-image-palette.git
-cd gpt-image-palette
-npm install
-```
-
-构建应用：
-
-```bash
-npm run build
-```
-
-启动生产服务：
-
-```bash
-npm run start
-```
-
-生产模式下，后端会同时提供 API 和构建后的前端页面。
-
-打开：
-
-```text
-http://127.0.0.1:43175
-```
 
 ## 配置
 
@@ -102,16 +67,6 @@ DATA_DIR=./backend/data
 ```
 
 运行数据、上传的参考图和生成图片会保存在 `DATA_DIR` 下。
-
-## 常用命令
-
-```bash
-npm run dev                      # 开发模式运行前后端
-npm run build                    # 构建前后端
-npm run start                    # 启动生产服务
-npm run test                     # 运行测试
-npm run update:prompt-templates  # 更新内置 prompt 模板库
-```
 
 ## 致谢
 

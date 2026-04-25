@@ -20,7 +20,7 @@ GPT Image Palette is a local image-generation workspace for `gpt-image-2` compat
 - npm
 - A compatible image API key
 
-## Development
+## Run Locally
 
 Clone the repository:
 
@@ -35,55 +35,20 @@ Install dependencies:
 npm install
 ```
 
-Start the app:
+Build and start the app:
 
 ```bash
-npm run dev
+npm run build
+npm run start
 ```
 
 Open:
-
-```text
-http://127.0.0.1:43174
-```
-
-The backend runs on:
 
 ```text
 http://127.0.0.1:43175
 ```
 
 Then open the Settings page and fill in your API base URL and API key.
-
-## Production Deployment
-
-Clone and install:
-
-```bash
-git clone --recurse-submodules https://github.com/mkaros2025/gpt-image-palette.git
-cd gpt-image-palette
-npm install
-```
-
-Build the app:
-
-```bash
-npm run build
-```
-
-Start the production server:
-
-```bash
-npm run start
-```
-
-In production, the backend serves both the API and the built frontend.
-
-Open:
-
-```text
-http://127.0.0.1:43175
-```
 
 ## Configuration
 
@@ -102,16 +67,6 @@ DATA_DIR=./backend/data
 ```
 
 Runtime data, uploaded reference images, and generated images are stored under `DATA_DIR`.
-
-## Useful Commands
-
-```bash
-npm run dev                      # run frontend and backend in development mode
-npm run build                    # build frontend and backend
-npm run start                    # start production server
-npm run test                     # run tests
-npm run update:prompt-templates  # update bundled prompt templates
-```
 
 ## Acknowledgements
 
