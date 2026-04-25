@@ -7,9 +7,7 @@ export const DEFAULT_WORKSPACE: Workspace = {
   colorSchemeId: 'preset-okabe-ito',
   customColors: null,
   count: 1,
-  referenceImagePath: null,
-  referenceImageName: null,
-  referenceImageMimeType: null,
+  referenceImages: [],
   updatedAt: '',
 };
 
@@ -21,6 +19,7 @@ export function normalizeWorkspace(input: Partial<Workspace> | null | undefined)
     quality: input?.quality || DEFAULT_WORKSPACE.quality,
     colorSchemeId: input?.colorSchemeId || DEFAULT_WORKSPACE.colorSchemeId,
     count: clampCount(input?.count ?? DEFAULT_WORKSPACE.count),
+    referenceImages: normalizeReferenceImages(input?.referenceImages),
   };
 }
 
@@ -38,12 +37,32 @@ export function buildWorkspacePayload(workspace: Workspace) {
 export function buildGenerationPayload(workspace: Workspace) {
   return {
     ...buildWorkspacePayload(workspace),
-    referenceImagePath: workspace.referenceImagePath,
-    referenceImageName: workspace.referenceImageName,
-    referenceImageMimeType: workspace.referenceImageMimeType,
+    referenceImages: normalizeReferenceImages(workspace.referenceImages),
   };
+}
+
+export function mergeReferenceImageFields(current: Workspace, serverWorkspace: Workspace): Workspace {
+  return normalizeWorkspace({
+    ...current,
+    referenceImages: serverWorkspace.referenceImages,
+    updatedAt: serverWorkspace.updatedAt,
+  });
 }
 
 function clampCount(count: number) {
   return Math.min(4, Math.max(1, Math.trunc(count)));
+}
+
+function normalizeReferenceImages(referenceImages: Workspace['referenceImages'] | null | undefined) {
+  if (!Array.isArray(referenceImages)) {
+    return [];
+  }
+
+  return referenceImages
+    .filter((image) => image && typeof image.path === 'string' && image.path.trim())
+    .map((image) => ({
+      path: image.path,
+      name: typeof image.name === 'string' ? image.name : null,
+      mimeType: typeof image.mimeType === 'string' ? image.mimeType : null,
+    }));
 }

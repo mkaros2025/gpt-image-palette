@@ -74,6 +74,7 @@ export function HistoryPage({ items, palettes, query, onQueryChange, onSearch, o
                           quality: item.quality,
                           colorSchemeId: item.colorSchemeId,
                           customColors: item.customColors,
+                          referenceImages: item.referenceImages,
                         })}>带回生成页</button>
                         <a className="table-icon-action" href={item.downloadUrl} aria-label={`下载 ${item.prompt}`}>下载</a>
                         <button className="table-icon-action table-icon-action--danger" type="button" aria-label={`删除 ${item.prompt}`} onClick={() => void onDelete(item.id)}>删除</button>

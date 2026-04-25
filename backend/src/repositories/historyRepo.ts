@@ -3,6 +3,12 @@ import type { SqliteDatabase } from '../db/client.js';
 
 export type HistoryStatus = 'pending' | 'running' | 'completed' | 'failed';
 
+export type ReferenceImage = {
+  path: string;
+  name: string | null;
+  mimeType: string | null;
+};
+
 export type HistoryImageRecord = {
   id: string;
   jobId: string;
@@ -11,7 +17,7 @@ export type HistoryImageRecord = {
   quality: string;
   colorSchemeId: string;
   customColors: Record<string, string> | null;
-  referenceImagePath: string | null;
+  referenceImages: ReferenceImage[];
   imagePath: string | null;
   status: HistoryStatus;
   width: number | null;
@@ -31,7 +37,7 @@ export type HistoryJobRecord = {
   colorSchemeId: string;
   customColors: Record<string, string> | null;
   count: number;
-  referenceImagePath: string | null;
+  referenceImages: ReferenceImage[];
   status: 'pending' | 'running' | 'completed' | 'failed';
   completedCount: number;
   failedCount: number;
@@ -51,7 +57,7 @@ export type CreateJobInput = {
   colorSchemeId: string;
   customColors: Record<string, string> | null;
   count: number;
-  referenceImagePath: string | null;
+  referenceImages: ReferenceImage[];
 };
 
 export type CreateImageInput = {
@@ -61,7 +67,7 @@ export type CreateImageInput = {
   quality: string;
   colorSchemeId: string;
   customColors: Record<string, string> | null;
-  referenceImagePath: string | null;
+  referenceImages: ReferenceImage[];
   status: HistoryStatus;
   position: number;
   imagePath: string | null;
@@ -81,6 +87,7 @@ export function createMemoryHistoryRepo() {
     return {
       ...image,
       customColors: image.customColors ? { ...image.customColors } : null,
+      referenceImages: image.referenceImages.map((referenceImage) => ({ ...referenceImage })),
     };
   }
 
@@ -88,6 +95,7 @@ export function createMemoryHistoryRepo() {
     return {
       ...job,
       customColors: job.customColors ? { ...job.customColors } : null,
+      referenceImages: job.referenceImages.map((referenceImage) => ({ ...referenceImage })),
     };
   }
 
@@ -117,7 +125,7 @@ export function createMemoryHistoryRepo() {
       colorSchemeId: input.colorSchemeId,
       customColors: input.customColors ? { ...input.customColors } : null,
       count: input.count,
-      referenceImagePath: input.referenceImagePath,
+      referenceImages: input.referenceImages.map((referenceImage) => ({ ...referenceImage })),
       status: 'pending',
       completedCount: 0,
       failedCount: 0,
@@ -144,6 +152,9 @@ export function createMemoryHistoryRepo() {
           : current.customColors
             ? { ...current.customColors }
             : null,
+      referenceImages: patch.referenceImages
+        ? patch.referenceImages.map((referenceImage) => ({ ...referenceImage }))
+        : current.referenceImages.map((referenceImage) => ({ ...referenceImage })),
       updatedAt: new Date().toISOString(),
     };
     jobs.set(id, next);
@@ -176,7 +187,7 @@ export function createMemoryHistoryRepo() {
       quality: input.quality,
       colorSchemeId: input.colorSchemeId,
       customColors: input.customColors ? { ...input.customColors } : null,
-      referenceImagePath: input.referenceImagePath,
+      referenceImages: input.referenceImages.map((referenceImage) => ({ ...referenceImage })),
       imagePath: input.imagePath,
       status: input.status,
       width: input.width,
@@ -206,6 +217,9 @@ export function createMemoryHistoryRepo() {
           : current.customColors
             ? { ...current.customColors }
             : null,
+      referenceImages: patch.referenceImages
+        ? patch.referenceImages.map((referenceImage) => ({ ...referenceImage }))
+        : current.referenceImages.map((referenceImage) => ({ ...referenceImage })),
       updatedAt: new Date().toISOString(),
     };
     images.set(id, next);
@@ -224,7 +238,7 @@ export function createMemoryHistoryRepo() {
   async function listCompletedImages(): Promise<HistoryImageRecord[]> {
     return sortByNewest(
       Array.from(images.values())
-        .filter((image) => image.status === 'completed')
+        .filter((image) => image.status === 'completed' || image.status === 'failed')
         .map(cloneImage),
     );
   }
@@ -256,7 +270,7 @@ export function createMemoryHistoryRepo() {
       quality: 'high',
       colorSchemeId: 'preset-okabe-ito',
       customColors: null,
-      referenceImagePath: null,
+      referenceImages: [],
       status: input.status,
       position: images.size,
       imagePath: input.imagePath,
@@ -280,7 +294,7 @@ export function createMemoryHistoryRepo() {
       quality: 'high',
       colorSchemeId: 'preset-okabe-ito',
       customColors: null,
-      referenceImagePath: null,
+      referenceImages: [],
       status: input.status,
       position: images.size,
       imagePath: null,
@@ -318,7 +332,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        color_scheme_id,
        custom_colors_json,
        count,
-       reference_image_path,
+       reference_images_json,
        status,
        completed_count,
        failed_count,
@@ -333,7 +347,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        @colorSchemeId,
        @customColorsJson,
        @count,
-       @referenceImagePath,
+       @referenceImagesJson,
        @status,
        @completedCount,
        @failedCount,
@@ -351,7 +365,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
          color_scheme_id = @colorSchemeId,
          custom_colors_json = @customColorsJson,
          count = @count,
-         reference_image_path = @referenceImagePath,
+         reference_images_json = @referenceImagesJson,
          status = @status,
          completed_count = @completedCount,
          failed_count = @failedCount,
@@ -369,7 +383,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        color_scheme_id AS colorSchemeId,
        custom_colors_json AS customColorsJson,
        count,
-       reference_image_path AS referenceImagePath,
+       reference_images_json AS referenceImagesJson,
        status,
        completed_count AS completedCount,
        failed_count AS failedCount,
@@ -389,7 +403,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        color_scheme_id AS colorSchemeId,
        custom_colors_json AS customColorsJson,
        count,
-       reference_image_path AS referenceImagePath,
+       reference_images_json AS referenceImagesJson,
        status,
        completed_count AS completedCount,
        failed_count AS failedCount,
@@ -410,7 +424,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        quality,
        color_scheme_id AS colorSchemeId,
        custom_colors_json AS customColorsJson,
-       reference_image_path AS referenceImagePath,
+       reference_images_json AS referenceImagesJson,
        image_path AS imagePath,
        status,
        width,
@@ -434,7 +448,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        quality,
        color_scheme_id,
        custom_colors_json,
-       reference_image_path,
+       reference_images_json,
        image_path,
        status,
        width,
@@ -452,7 +466,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        @quality,
        @colorSchemeId,
        @customColorsJson,
-       @referenceImagePath,
+       @referenceImagesJson,
        @imagePath,
        @status,
        @width,
@@ -472,7 +486,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
          quality = @quality,
          color_scheme_id = @colorSchemeId,
          custom_colors_json = @customColorsJson,
-         reference_image_path = @referenceImagePath,
+         reference_images_json = @referenceImagesJson,
          image_path = @imagePath,
          status = @status,
          width = @width,
@@ -493,7 +507,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        quality,
        color_scheme_id AS colorSchemeId,
        custom_colors_json AS customColorsJson,
-       reference_image_path AS referenceImagePath,
+       reference_images_json AS referenceImagesJson,
        image_path AS imagePath,
        status,
        width,
@@ -516,7 +530,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        quality,
        color_scheme_id AS colorSchemeId,
        custom_colors_json AS customColorsJson,
-       reference_image_path AS referenceImagePath,
+       reference_images_json AS referenceImagesJson,
        image_path AS imagePath,
        status,
        width,
@@ -527,7 +541,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        created_at AS createdAt,
        updated_at AS updatedAt
      FROM generation_images
-     WHERE status = 'completed'
+     WHERE status IN ('completed', 'failed')
      ORDER BY created_at DESC`,
   );
 
@@ -540,7 +554,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
        quality,
        color_scheme_id AS colorSchemeId,
        custom_colors_json AS customColorsJson,
-       reference_image_path AS referenceImagePath,
+       reference_images_json AS referenceImagesJson,
        image_path AS imagePath,
        status,
        width,
@@ -575,6 +589,43 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
     return null;
   }
 
+  function parseReferenceImages(raw: string | null): ReferenceImage[] {
+    if (!raw) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => {
+            if (!item || typeof item !== 'object') {
+              return null;
+            }
+            const record = item as Record<string, unknown>;
+            const path = typeof record.path === 'string' ? record.path : null;
+            if (!path) {
+              return null;
+            }
+            return {
+              path,
+              name: typeof record.name === 'string' ? record.name : null,
+              mimeType: typeof record.mimeType === 'string' ? record.mimeType : null,
+            };
+          })
+          .filter((item): item is ReferenceImage => Boolean(item));
+      }
+    } catch {
+      // Ignore malformed JSON.
+    }
+
+    return [];
+  }
+
+  function stringifyReferenceImages(referenceImages: ReferenceImage[]) {
+    return referenceImages.length ? JSON.stringify(referenceImages) : null;
+  }
+
   function toJob(row: Record<string, unknown>): HistoryJobRecord {
     return {
       id: String(row.id),
@@ -584,7 +635,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
       colorSchemeId: String(row.colorSchemeId),
       customColors: parseCustomColors((row.customColorsJson as string | null) ?? null),
       count: Number(row.count),
-      referenceImagePath: (row.referenceImagePath as string | null) ?? null,
+      referenceImages: parseReferenceImages((row.referenceImagesJson as string | null) ?? null),
       status: row.status as HistoryJobRecord['status'],
       completedCount: Number(row.completedCount ?? 0),
       failedCount: Number(row.failedCount ?? 0),
@@ -603,7 +654,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
       quality: String(row.quality),
       colorSchemeId: String(row.colorSchemeId),
       customColors: parseCustomColors((row.customColorsJson as string | null) ?? null),
-      referenceImagePath: (row.referenceImagePath as string | null) ?? null,
+      referenceImages: parseReferenceImages((row.referenceImagesJson as string | null) ?? null),
       imagePath: (row.imagePath as string | null) ?? null,
       status: row.status as HistoryStatus,
       width: row.width === null || row.width === undefined ? null : Number(row.width),
@@ -626,7 +677,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
         colorSchemeId: input.colorSchemeId,
         customColors: input.customColors ? { ...input.customColors } : null,
         count: input.count,
-        referenceImagePath: input.referenceImagePath,
+        referenceImages: input.referenceImages.map((referenceImage) => ({ ...referenceImage })),
         status: 'pending',
         completedCount: 0,
         failedCount: 0,
@@ -637,6 +688,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
       insertJobStatement.run({
         ...job,
         customColorsJson: job.customColors ? JSON.stringify(job.customColors) : null,
+        referenceImagesJson: stringifyReferenceImages(job.referenceImages),
       });
       return job;
     },
@@ -655,11 +707,15 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
             : current.customColors
               ? { ...current.customColors }
               : null,
+        referenceImages: patch.referenceImages
+          ? patch.referenceImages.map((referenceImage) => ({ ...referenceImage }))
+          : current.referenceImages.map((referenceImage) => ({ ...referenceImage })),
         updatedAt: new Date().toISOString(),
       };
       updateJobStatement.run({
         ...next,
         customColorsJson: next.customColors ? JSON.stringify(next.customColors) : null,
+        referenceImagesJson: stringifyReferenceImages(next.referenceImages),
       });
       return next;
     },
@@ -685,7 +741,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
         quality: input.quality,
         colorSchemeId: input.colorSchemeId,
         customColors: input.customColors ? { ...input.customColors } : null,
-        referenceImagePath: input.referenceImagePath,
+        referenceImages: input.referenceImages.map((referenceImage) => ({ ...referenceImage })),
         imagePath: input.imagePath,
         status: input.status,
         width: input.width,
@@ -699,6 +755,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
       insertImageStatement.run({
         ...image,
         customColorsJson: image.customColors ? JSON.stringify(image.customColors) : null,
+        referenceImagesJson: stringifyReferenceImages(image.referenceImages),
       });
       return image;
     },
@@ -717,11 +774,15 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
             : current.customColors
               ? { ...current.customColors }
               : null,
+        referenceImages: patch.referenceImages
+          ? patch.referenceImages.map((referenceImage) => ({ ...referenceImage }))
+          : current.referenceImages.map((referenceImage) => ({ ...referenceImage })),
         updatedAt: new Date().toISOString(),
       };
       updateImageStatement.run({
         ...next,
         customColorsJson: next.customColors ? JSON.stringify(next.customColors) : null,
+        referenceImagesJson: stringifyReferenceImages(next.referenceImages),
       });
       return next;
     },
@@ -755,7 +816,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
         quality: 'high',
         colorSchemeId: 'preset-okabe-ito',
         customColors: null,
-        referenceImagePath: null,
+        referenceImages: [],
         status: input.status,
         position: 0,
         imagePath: input.imagePath,
@@ -778,7 +839,7 @@ export function createSqliteHistoryRepo(db: SqliteDatabase) {
         quality: 'high',
         colorSchemeId: 'preset-okabe-ito',
         customColors: null,
-        referenceImagePath: null,
+        referenceImages: [],
         status: input.status,
         position: 0,
         imagePath: null,

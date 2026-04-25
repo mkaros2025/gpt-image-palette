@@ -11,7 +11,7 @@ const item = {
   quality: 'high',
   colorSchemeId: 'preset-okabe-ito',
   customColors: null,
-  referenceImagePath: null,
+  referenceImages: [],
   imagePath: 'generated/image.png',
   status: 'completed',
   width: 1024,

@@ -1,26 +1,110 @@
-# gpt-image-palette
+# GPT Image Palette
 
-gpt-image-palette 是一个简约的科研配图生成工具。它包含 React 前端和 Fastify 后端，生产环境由 Fastify 同时提供页面、API 和本地生成文件访问。
+English | [中文](./README.zh-CN.md)
 
-## 功能
+GPT Image Palette is a local image-generation workspace for `gpt-image-2` compatible services. It gives you a clean web UI for writing prompts, using prompt templates, uploading reference images, applying color palettes, generating images, and managing history.
 
-- 生成页：prompt、尺寸、质量、数量、配色、参考图、当前任务、最近结果画廊
-- 历史页：表格 + 缩略图，支持搜索、下载、删除、带回生成页
-- 配色页：固定 8 个语义色槽，支持预设和自定义方案管理
-- 设置页：保存 `baseURL` / `API Key`，手动测试连接
+## What It Does
 
-## 部署方式
+- Write and reuse image prompts in a focused generation workspace.
+- Browse and apply bundled prompt templates from `awesome-gpt-image-2-prompts`.
+- Upload multiple reference images for image-to-image generation.
+- Choose image size, quality, output count, and optional color palettes.
+- Preview the latest result and review recent outputs.
+- Manage generated image history with search, detail view, download, delete, and reuse.
+- Save your API base URL and API key in the settings page.
 
-macOS、Linux、Windows 的命令一致：
+## Requirements
 
-1. 安装 Node.js 22 或更高版本。
-2. 执行 `npm install`。
-3. 开发模式运行 `npm run dev`。
-4. 生产模式运行 `npm run build`，然后执行 `npm run start`。
+- Node.js 22 or newer
+- npm
+- A compatible image API key
 
-## 说明
+## Development
 
-- 开发前端默认运行在 `http://127.0.0.1:43174`。
-- 后端默认运行在 `http://127.0.0.1:43175`。
-- 生产模式只需要启动 Fastify。
-- 本地数据默认保存在 `backend/data/`。
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the app:
+
+```bash
+npm run dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:43174
+```
+
+The backend runs on:
+
+```text
+http://127.0.0.1:43175
+```
+
+Then open the Settings page and fill in your API base URL and API key.
+
+## Production Deployment
+
+Build the app:
+
+```bash
+npm run build
+```
+
+Start the production server:
+
+```bash
+npm run start
+```
+
+In production, the backend serves both the API and the built frontend.
+
+## Configuration
+
+You can copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Default values:
+
+```dotenv
+HOST=127.0.0.1
+PORT=43175
+DATA_DIR=./backend/data
+```
+
+Runtime data, uploaded reference images, and generated images are stored under `DATA_DIR`.
+
+## Useful Commands
+
+```bash
+npm run dev                      # run frontend and backend in development mode
+npm run build                    # build frontend and backend
+npm run start                    # start production server
+npm run test                     # run tests
+npm run update:prompt-templates  # update bundled prompt templates
+```
+
+## Acknowledgements
+
+This project takes inspiration from:
+
+- [academic-figure-generator](https://github.com/LigphiDonk/academic-figure-generator)
+- [gpt-image-playground](https://github.com/alasano/gpt-image-playground)
+
+The bundled prompt template library is sourced from:
+
+- [awesome-gpt-image-2-prompts](https://github.com/EvoLinkAI/awesome-gpt-image-2-prompts)
+
+It is imported into this repository with `git subtree`.
+
+## License
+
+See [LICENSE](./LICENSE).

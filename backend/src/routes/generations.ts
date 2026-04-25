@@ -11,9 +11,11 @@ const generationSchema = z.object({
   colorSchemeId: z.string().trim().min(1),
   customColors: z.record(z.string(), z.string()).nullable().default(null),
   count: z.coerce.number().int().min(1).max(4),
-  referenceImagePath: z.string().nullable().default(null),
-  referenceImageName: z.string().nullable().default(null),
-  referenceImageMimeType: z.string().nullable().default(null),
+  referenceImages: z.array(z.object({
+    path: z.string().trim().min(1),
+    name: z.string().nullable().default(null),
+    mimeType: z.string().nullable().default(null),
+  })).default([]),
 });
 
 export function registerGenerationRoutes(

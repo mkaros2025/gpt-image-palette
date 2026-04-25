@@ -11,7 +11,16 @@ export function formatDateTime(value: string | null | undefined) {
     return value;
   }
 
-  return date.toLocaleString();
+  return new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hourCycle: 'h23',
+    timeZoneName: 'short',
+  }).format(date);
 }
 
 export function getPaletteLabel(palettes: ColorScheme[], id: string) {

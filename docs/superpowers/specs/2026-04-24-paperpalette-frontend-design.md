@@ -10,7 +10,7 @@ The frontend will use React + Vite + TypeScript. In production, Fastify will ser
 
 - No landing page.
 - No onboarding page.
-- No prompt templates.
+- Prompt templates are allowed only as a restrained, attributed library inside the Generate composer.
 - No segmented prompt builder.
 - No decorative animation.
 - No large hero section.
@@ -66,6 +66,7 @@ Layout:
 Left column:
 
 - Prompt large textarea.
+- Prompt template library sourced from `EvoLinkAI/awesome-gpt-image-2-prompts`, with attribution and no image hotlink dependency.
 - Size selector.
 - Quality selector.
 - Generation count control.

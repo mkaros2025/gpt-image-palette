@@ -2,6 +2,12 @@ import type { SqliteDatabase } from '../db/client.js';
 
 export type CustomColors = Record<string, string> | null;
 
+export type ReferenceImage = {
+  path: string;
+  name: string | null;
+  mimeType: string | null;
+};
+
 export type WorkspaceState = {
   prompt: string;
   size: string;
@@ -9,9 +15,7 @@ export type WorkspaceState = {
   colorSchemeId: string;
   customColors: CustomColors;
   count: number;
-  referenceImagePath: string | null;
-  referenceImageName: string | null;
-  referenceImageMimeType: string | null;
+  referenceImages: ReferenceImage[];
   updatedAt: string;
 };
 
@@ -22,9 +26,7 @@ type WorkspaceRow = {
   colorSchemeId: string;
   customColorsJson: string | null;
   count: number;
-  referenceImagePath: string | null;
-  referenceImageName: string | null;
-  referenceImageMimeType: string | null;
+  referenceImagesJson: string | null;
   updatedAt: string;
 };
 
@@ -37,9 +39,7 @@ export function createWorkspaceRepo(db: SqliteDatabase) {
        color_scheme_id AS colorSchemeId,
        custom_colors_json AS customColorsJson,
        count,
-       reference_image_path AS referenceImagePath,
-       reference_image_name AS referenceImageName,
-       reference_image_mime_type AS referenceImageMimeType,
+       reference_images_json AS referenceImagesJson,
        updated_at AS updatedAt
      FROM workspace_state
      WHERE id = 1`,
@@ -72,26 +72,15 @@ export function createWorkspaceRepo(db: SqliteDatabase) {
        quality = excluded.quality,
        color_scheme_id = excluded.color_scheme_id,
        custom_colors_json = excluded.custom_colors_json,
-        count = excluded.count,
+       count = excluded.count,
        updated_at = CURRENT_TIMESTAMP`,
   );
 
-  const setReferenceStatement = db.prepare(
+  const setReferenceImagesStatement = db.prepare(
     `UPDATE workspace_state
-     SET reference_image_path = @referenceImagePath,
-         reference_image_name = @referenceImageName,
-         reference_image_mime_type = @referenceImageMimeType,
+     SET reference_images_json = @referenceImagesJson,
          updated_at = CURRENT_TIMESTAMP
      WHERE id = 1`,
-  );
-
-  const clearReferenceStatement = db.prepare(
-    `UPDATE workspace_state
-     SET reference_image_path = NULL,
-         reference_image_name = NULL,
-         reference_image_mime_type = NULL,
-         updated_at = CURRENT_TIMESTAMP
-    WHERE id = 1`,
   );
 
   function getWorkspace(): WorkspaceState {
@@ -104,9 +93,7 @@ export function createWorkspaceRepo(db: SqliteDatabase) {
         colorSchemeId: 'preset-okabe-ito',
         customColors: null,
         count: 1,
-        referenceImagePath: null,
-        referenceImageName: null,
-        referenceImageMimeType: null,
+        referenceImages: [],
         updatedAt: '',
       };
     }
@@ -118,9 +105,7 @@ export function createWorkspaceRepo(db: SqliteDatabase) {
       colorSchemeId: row.colorSchemeId,
       customColors: parseCustomColors(row.customColorsJson),
       count: row.count,
-      referenceImagePath: row.referenceImagePath,
-      referenceImageName: row.referenceImageName,
-      referenceImageMimeType: row.referenceImageMimeType,
+      referenceImages: parseReferenceImages(row.referenceImagesJson),
       updatedAt: row.updatedAt,
     };
   }
@@ -142,16 +127,15 @@ export function createWorkspaceRepo(db: SqliteDatabase) {
 
       return getWorkspace();
     },
-    setReferenceImage(input: {
-      referenceImagePath: string;
-      referenceImageName: string;
-      referenceImageMimeType: string;
-    }): WorkspaceState {
-      setReferenceStatement.run(input);
+    setReferenceImages(referenceImages: ReferenceImage[]): WorkspaceState {
+      const normalized = referenceImages.filter((image) => image.path);
+      setReferenceImagesStatement.run({
+        referenceImagesJson: normalized.length ? JSON.stringify(normalized) : null,
+      });
       return getWorkspace();
     },
-    clearReferenceImage(): WorkspaceState {
-      clearReferenceStatement.run();
+    clearReferenceImages(): WorkspaceState {
+      setReferenceImagesStatement.run({ referenceImagesJson: null });
       return getWorkspace();
     },
   };
@@ -172,4 +156,37 @@ function parseCustomColors(raw: string | null): CustomColors {
   }
 
   return null;
+}
+
+function parseReferenceImages(raw: string | null): ReferenceImage[] {
+  if (!raw) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed
+        .map((item) => {
+          if (!item || typeof item !== 'object') {
+            return null;
+          }
+          const record = item as Record<string, unknown>;
+          const path = typeof record.path === 'string' ? record.path : null;
+          if (!path) {
+            return null;
+          }
+          return {
+            path,
+            name: typeof record.name === 'string' ? record.name : null,
+            mimeType: typeof record.mimeType === 'string' ? record.mimeType : null,
+          };
+        })
+        .filter((item): item is ReferenceImage => Boolean(item));
+    }
+  } catch {
+    // Ignore malformed JSON.
+  }
+
+  return [];
 }

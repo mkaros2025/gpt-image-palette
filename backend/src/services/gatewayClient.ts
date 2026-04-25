@@ -15,9 +15,11 @@ export type GatewayGenerateInput = {
 };
 
 export type GatewayEditInput = GatewayGenerateInput & {
-  referenceImageBytes: Buffer;
-  referenceImageMimeType: string;
-  referenceImageName?: string | null;
+  referenceImages: Array<{
+    bytes: Buffer;
+    mimeType: string;
+    name?: string | null;
+  }>;
 };
 
 export type GatewayClient = ReturnType<typeof createGatewayClient>;
@@ -31,8 +33,9 @@ export function createGatewayClient(defaultModel = 'gpt-image-2') {
         n: 1,
         size: input.size,
         quality: input.quality,
+        response_format: 'b64_json',
       });
-      return coerceGatewayResult(payload, input.size);
+      return coerceGatewayResult(payload, input.size, input.baseUrl);
     },
     async editImage(input: GatewayEditInput): Promise<GatewayImageResult> {
       const formData = new FormData();
@@ -41,13 +44,16 @@ export function createGatewayClient(defaultModel = 'gpt-image-2') {
       formData.append('n', '1');
       formData.append('size', input.size);
       formData.append('quality', input.quality);
-      const blob = new Blob([input.referenceImageBytes], {
-        type: input.referenceImageMimeType || 'image/png',
-      });
-      formData.append('image', blob, input.referenceImageName || 'reference.png');
+      formData.append('response_format', 'b64_json');
+      for (const image of input.referenceImages) {
+        const blob = new Blob([image.bytes], {
+          type: image.mimeType || 'image/png',
+        });
+        formData.append('image[]', blob, image.name || 'reference.png');
+      }
 
       const payload = await postFormData(input.baseUrl, input.apiKey, '/images/edits', formData);
-      return coerceGatewayResult(payload, input.size);
+      return coerceGatewayResult(payload, input.size, input.baseUrl);
     },
     async testConnection(input: { baseUrl: string; apiKey: string }) {
       const response = await fetch(resolveEndpoint(input.baseUrl, '/models'), {
@@ -119,7 +125,7 @@ function normalizeBaseUrl(baseUrl: string) {
   return trimmed.endsWith('/v1') ? trimmed : `${trimmed}/v1`;
 }
 
-async function coerceGatewayResult(payload: unknown, fallbackSize: string): Promise<GatewayImageResult> {
+async function coerceGatewayResult(payload: unknown, fallbackSize: string, baseUrl: string): Promise<GatewayImageResult> {
   const base64 = extractImageBase64(payload);
   const url = extractImageUrl(payload);
 
@@ -133,7 +139,7 @@ async function coerceGatewayResult(payload: unknown, fallbackSize: string): Prom
   }
 
   if (url) {
-    const downloaded = await downloadImageUrlAsBase64(url);
+    const downloaded = await downloadImageUrlAsBase64(url, baseUrl);
     if (downloaded) {
       return {
         imageBase64: downloaded,
@@ -213,8 +219,8 @@ function extractErrorMessage(payload: unknown, fallback: string) {
   return fallback.slice(0, 500);
 }
 
-async function downloadImageUrlAsBase64(imageUrl: string) {
-  const response = await fetch(imageUrl, {
+async function downloadImageUrlAsBase64(imageUrl: string, baseUrl: string) {
+  const response = await fetch(resolveImageUrl(imageUrl, baseUrl), {
     method: 'GET',
   });
 
@@ -228,6 +234,15 @@ async function downloadImageUrlAsBase64(imageUrl: string) {
   }
 
   return bytes.toString('base64');
+}
+
+function resolveImageUrl(imageUrl: string, baseUrl: string) {
+  const normalizedBase = baseUrl.trim().replace(/\/+$/, '');
+  try {
+    return new URL(imageUrl, `${normalizedBase}/`).toString();
+  } catch {
+    return imageUrl;
+  }
 }
 
 function inferMimeType(bytes: Buffer) {

@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
 
 import { BrandLogo } from './components/BrandLogo';
-import { GeneratePage } from './components/GeneratePage';
+import { GeneratePage, type GenerationNotice } from './components/GeneratePage';
 import { HistoryPage } from './components/HistoryPage';
 import { PalettesPage } from './components/PalettesPage';
 import { SettingsPage } from './components/SettingsPage';
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from './lib/api';
+import { getHistoryErrorMessage } from './lib/history';
 import { NAV_ITEMS, normalizePageId, type PageId } from './lib/navigation';
 import type { ColorScheme, GenerationJob, HistoryItem, PaletteColors, Settings, Workspace } from './lib/types';
-import { buildGenerationPayload, buildWorkspacePayload, DEFAULT_WORKSPACE, normalizeWorkspace } from './lib/workspacePayload';
+import { buildGenerationPayload, buildWorkspacePayload, DEFAULT_WORKSPACE, mergeReferenceImageFields, normalizeWorkspace } from './lib/workspacePayload';
 import './styles.css';
+
+const GENERATION_POLL_TIMEOUT_MS = 600_000;
+const GENERATION_POLL_INTERVAL_MS = 2_000;
+const GENERATION_INITIAL_POLL_DELAY_MS = 1_000;
 
 export function App() {
   const [page, setPage] = useState<PageId>(() => {
@@ -25,6 +30,8 @@ export function App() {
   const [activeJobs, setActiveJobs] = useState<GenerationJob[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [settingsStatus, setSettingsStatus] = useState<string | null>(null);
+  const [generationNotice, setGenerationNotice] = useState<GenerationNotice>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedPaletteId, setSelectedPaletteId] = useState('preset-okabe-ito');
   const [historyQuery, setHistoryQuery] = useState('');
 
@@ -69,11 +76,15 @@ export function App() {
   };
 
   const refreshHistory = async () => {
-    setHistory(await apiGet<HistoryItem[]>('/history'));
+    const nextHistory = await apiGet<HistoryItem[]>('/history');
+    setHistory(nextHistory);
+    return nextHistory;
   };
 
   const refreshActiveJobs = async () => {
-    setActiveJobs(await apiGet<GenerationJob[]>('/generations/active'));
+    const nextActiveJobs = await apiGet<GenerationJob[]>('/generations/active');
+    setActiveJobs(nextActiveJobs);
+    return nextActiveJobs;
   };
 
   const saveWorkspace = async () => {
@@ -81,23 +92,78 @@ export function App() {
     setWorkspace(normalizeWorkspace(saved));
   };
 
-  const uploadReferenceImage = async (file: File) => {
+  const uploadReferenceImages = async (files: File[]) => {
     const formData = new FormData();
-    formData.append('file', file);
-    const saved = await apiPost<Workspace>('/workspace/reference-image', formData);
-    setWorkspace(normalizeWorkspace(saved));
+    files.forEach((file) => formData.append('files', file));
+    const saved = await apiPost<Workspace>('/workspace/reference-images', formData);
+    setWorkspace((current) => mergeReferenceImageFields(current, normalizeWorkspace(saved)));
   };
 
-  const removeReferenceImage = async () => {
-    const saved = await apiDelete<Workspace>('/workspace/reference-image');
-    setWorkspace(normalizeWorkspace(saved));
+  const removeReferenceImage = async (index: number) => {
+    const saved = await apiDelete<Workspace>(`/workspace/reference-images/${index}`);
+    setWorkspace((current) => mergeReferenceImageFields(current, normalizeWorkspace(saved)));
   };
 
   const generate = async () => {
-    await saveWorkspace();
-    await apiPost('/generations', buildGenerationPayload(workspace));
-    await refreshActiveJobs();
-    await refreshHistory();
+    if (isGenerating) {
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationNotice({ kind: 'running', message: '正在提交生成任务...' });
+
+    try {
+      await saveWorkspace();
+      const job = await apiPost<{ id: string; requestedCount: number; status: string }>('/generations', buildGenerationPayload(workspace));
+      setGenerationNotice({ kind: 'running', message: '任务已提交，正在生成...' });
+      await refreshActiveJobs();
+      await refreshHistory();
+      await pollGeneration(job.id, job.requestedCount);
+    } catch (error) {
+      setGenerationNotice({
+        kind: 'failed',
+        message: error instanceof Error ? error.message : String(error),
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const pollGeneration = async (jobId: string, requestedCount: number) => {
+    const deadline = Date.now() + GENERATION_POLL_TIMEOUT_MS;
+    let firstPoll = true;
+
+    while (Date.now() < deadline) {
+      await delay(firstPoll ? GENERATION_INITIAL_POLL_DELAY_MS : GENERATION_POLL_INTERVAL_MS);
+      firstPoll = false;
+      const [nextActiveJobs, nextHistory] = await Promise.all([
+        refreshActiveJobs(),
+        refreshHistory(),
+      ]);
+      const jobStillActive = nextActiveJobs.some((job) => job.id === jobId);
+      const jobItems = nextHistory.filter((item) => item.jobId === jobId);
+      const failedItem = jobItems.find((item) => item.status === 'failed');
+
+      if (failedItem) {
+        setGenerationNotice({
+          kind: 'failed',
+          message: getHistoryErrorMessage(failedItem) ?? '生成失败，但网关没有返回错误详情。',
+        });
+        return;
+      }
+
+      if (!jobStillActive && jobItems.length >= requestedCount) {
+        setGenerationNotice({ kind: 'success', message: '生成完成。' });
+        return;
+      }
+
+      if (!jobStillActive && jobItems.length === 0) {
+        setGenerationNotice({ kind: 'failed', message: '任务已结束，但没有返回图片。请检查网关响应或设置。' });
+        return;
+      }
+    }
+
+    setGenerationNotice({ kind: 'running', message: '任务仍在生成，已等待 600 秒，可稍后刷新历史查看结果。' });
   };
 
   const deleteHistoryItem = async (id: string) => {
@@ -200,9 +266,10 @@ export function App() {
             palettes={palettes}
             activeJobs={activeJobs}
             history={history}
+            generationNotice={generationNotice}
+            isGenerating={isGenerating}
             onWorkspaceChange={setWorkspace}
-            onSaveWorkspace={saveWorkspace}
-            onUploadReferenceImage={uploadReferenceImage}
+            onUploadReferenceImages={uploadReferenceImages}
             onRemoveReferenceImage={removeReferenceImage}
             onGenerate={generate}
             onOpenSettings={() => selectPage('settings')}
@@ -244,4 +311,10 @@ export function App() {
       </section>
     </main>
   );
+}
+
+function delay(ms: number) {
+  return new Promise((resolveDelay) => {
+    globalThis.setTimeout(resolveDelay, ms);
+  });
 }

@@ -43,9 +43,7 @@ describe('generation service', () => {
       colorSchemeId: 'preset-okabe-ito',
       customColors: null,
       count: 4,
-      referenceImagePath: null,
-      referenceImageName: null,
-      referenceImageMimeType: null,
+      referenceImages: [],
     });
 
     await service.waitForIdle();
@@ -87,14 +85,72 @@ describe('generation service', () => {
       colorSchemeId: 'none',
       customColors: null,
       count: 1,
-      referenceImagePath: null,
-      referenceImageName: null,
-      referenceImageMimeType: null,
+      referenceImages: [],
     });
 
     await service.waitForIdle();
 
     expect(prompts).toEqual(['plain prompt']);
+  });
+
+  it('uses all stored relative file paths when the client submits public reference image URLs', async () => {
+    const repo = createMemoryHistoryRepo();
+    const existsCalls: string[] = [];
+    const readCalls: string[] = [];
+    const editInputs: Array<{ referenceImages: Array<{ name?: string | null; mimeType: string }> }> = [];
+    const fileStore = {
+      async writeFile(_path: string, _bytes: Buffer) {},
+      async exists(path: string) {
+        existsCalls.push(path);
+        return path === 'workspace/reference-images/a.png' || path === 'workspace/reference-images/b.png';
+      },
+      async removeFile(_path: string) {},
+      async readFile(path: string) {
+        readCalls.push(path);
+        return Buffer.from('fake');
+      },
+    };
+    const gateway = {
+      async generateImage() {
+        throw new Error('unexpected generate call');
+      },
+      async editImage(input: { referenceImages: Array<{ name?: string | null; mimeType: string }> }) {
+        editInputs.push(input);
+        return { imageBase64: 'ZmFrZQ==', width: 1024, height: 1024, mimeType: 'image/png' };
+      },
+    };
+
+    const service = createGenerationService({ repo, fileStore, gateway });
+    await service.startBatch({
+      prompt: 'edit prompt',
+      size: '1024x1024',
+      quality: 'high',
+      colorSchemeId: 'none',
+      customColors: null,
+      count: 1,
+      referenceImages: [
+        {
+          path: '/data/workspace/reference-images/a.png',
+          name: 'reference-a.png',
+          mimeType: 'image/png',
+        },
+        {
+          path: '/data/workspace/reference-images/b.png',
+          name: 'reference-b.png',
+          mimeType: 'image/png',
+        },
+      ],
+    });
+
+    await service.waitForIdle();
+
+    expect(existsCalls).toEqual(['workspace/reference-images/a.png', 'workspace/reference-images/b.png']);
+    expect(readCalls).toEqual(['workspace/reference-images/a.png', 'workspace/reference-images/b.png']);
+    expect(editInputs).toHaveLength(1);
+    expect(editInputs[0]?.referenceImages).toMatchObject([
+      { name: 'reference-a.png', mimeType: 'image/png' },
+      { name: 'reference-b.png', mimeType: 'image/png' },
+    ]);
   });
 
   it('keeps failed records searchable and deletes one image without removing siblings', async () => {

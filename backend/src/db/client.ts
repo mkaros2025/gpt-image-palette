@@ -30,6 +30,22 @@ export function openDatabase(dataDir: string): SqliteDatabase {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
   db.exec(readSchema());
+  migrateSchema(db);
 
   return db;
+}
+
+function migrateSchema(db: SqliteDatabase) {
+  addColumnIfMissing(db, 'workspace_state', 'reference_images_json', 'TEXT');
+  addColumnIfMissing(db, 'generation_jobs', 'reference_images_json', 'TEXT');
+  addColumnIfMissing(db, 'generation_images', 'reference_images_json', 'TEXT');
+}
+
+function addColumnIfMissing(db: SqliteDatabase, table: string, column: string, definition: string) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (columns.some((item) => item.name === column)) {
+    return;
+  }
+
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
 }

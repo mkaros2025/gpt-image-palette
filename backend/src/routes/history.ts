@@ -58,8 +58,14 @@ function toHistoryResponse(
   item: Awaited<ReturnType<HistoryRepo['getImage']>> extends infer T ? NonNullable<T> : never,
   fileStore: FileStore,
 ) {
+  const { error, ...rest } = item;
   return {
-    ...item,
+    ...rest,
+    referenceImages: item.referenceImages.map((image) => ({
+      ...image,
+      path: fileStore.toPublicUrl(image.path),
+    })),
+    errorMessage: error,
     previewUrl: item.imagePath ? fileStore.toPublicUrl(item.imagePath) : null,
     downloadUrl: `/api/history/${item.id}/download`,
   };

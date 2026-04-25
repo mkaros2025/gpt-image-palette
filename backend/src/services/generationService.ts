@@ -8,6 +8,12 @@ import type { GatewayClient } from './gatewayClient.js';
 
 const NO_COLOR_SCHEME_ID = 'none';
 
+export type ReferenceImageInput = {
+  path: string;
+  name: string | null;
+  mimeType: string | null;
+};
+
 export type StartBatchInput = {
   prompt: string;
   size: string;
@@ -15,9 +21,7 @@ export type StartBatchInput = {
   colorSchemeId: string;
   customColors: Record<string, string> | null;
   count: number;
-  referenceImagePath: string | null;
-  referenceImageName: string | null;
-  referenceImageMimeType: string | null;
+  referenceImages: ReferenceImageInput[];
 };
 
 export type GenerationServiceOptions = {
@@ -33,6 +37,7 @@ export function createGenerationService(options: GenerationServiceOptions) {
   let queue = Promise.resolve();
 
   async function startBatch(input: StartBatchInput) {
+    const referenceImages = normalizeReferenceImages(input.referenceImages);
     const job = await options.repo.createJob({
       prompt: input.prompt,
       size: input.size,
@@ -40,7 +45,7 @@ export function createGenerationService(options: GenerationServiceOptions) {
       colorSchemeId: input.colorSchemeId,
       customColors: input.customColors,
       count: clampCount(input.count),
-      referenceImagePath: input.referenceImagePath,
+      referenceImages,
     });
 
     const images: Array<{ id: string }> = [];
@@ -52,7 +57,7 @@ export function createGenerationService(options: GenerationServiceOptions) {
         quality: input.quality,
         colorSchemeId: input.colorSchemeId,
         customColors: input.customColors,
-        referenceImagePath: input.referenceImagePath,
+        referenceImages,
         status: 'pending',
         position: index,
         imagePath: null,
@@ -65,7 +70,7 @@ export function createGenerationService(options: GenerationServiceOptions) {
     }
 
     queue = queue
-      .then(() => processBatch(job.id, images, input))
+      .then(() => processBatch(job.id, images, { ...input, referenceImages }))
       .catch((error) => {
         // Keep the chain alive. A failed batch has already been recorded in the repo.
         console.error('generation queue error', error);
@@ -98,19 +103,25 @@ export function createGenerationService(options: GenerationServiceOptions) {
       try {
         const gatewayConfig = options.getGatewayConfig?.();
         const prompt = palettePrompt ? `${imageRecord.prompt}\n\n${palettePrompt}` : imageRecord.prompt;
-        const hasReferenceImage =
-          Boolean(input.referenceImagePath) && (await options.fileStore.exists(input.referenceImagePath!));
+        const existingReferenceImages = [];
+        for (const image of input.referenceImages) {
+          if (await options.fileStore.exists(image.path)) {
+            existingReferenceImages.push(image);
+          }
+        }
 
-        const result = hasReferenceImage && input.referenceImagePath
+        const result = existingReferenceImages.length
           ? await options.gateway.editImage({
               baseUrl: gatewayConfig?.baseUrl ?? '',
               apiKey: gatewayConfig?.apiKey ?? '',
               prompt,
               size: imageRecord.size,
               quality: imageRecord.quality,
-              referenceImageBytes: await options.fileStore.readFile(input.referenceImagePath),
-              referenceImageMimeType: input.referenceImageMimeType ?? 'image/png',
-              referenceImageName: input.referenceImageName ?? 'reference.png',
+              referenceImages: await Promise.all(existingReferenceImages.map(async (image) => ({
+                bytes: await options.fileStore.readFile(image.path),
+                mimeType: image.mimeType ?? 'image/png',
+                name: image.name ?? 'reference.png',
+              }))),
             })
           : await options.gateway.generateImage({
               baseUrl: gatewayConfig?.baseUrl ?? '',
@@ -171,6 +182,22 @@ export function createGenerationService(options: GenerationServiceOptions) {
 
 function clampCount(count: number) {
   return Math.min(4, Math.max(1, Math.trunc(count)));
+}
+
+function normalizeReferenceImages(referenceImages: ReferenceImageInput[] | null | undefined) {
+  if (!Array.isArray(referenceImages)) {
+    return [];
+  }
+
+  return referenceImages
+    .filter((image) => image?.path)
+    .map((image) => ({
+      path: image.path.startsWith('/data/')
+        ? image.path.slice('/data/'.length)
+        : image.path.replace(/^\/+/, ''),
+      name: image.name ?? null,
+      mimeType: image.mimeType ?? null,
+    }));
 }
 
 function parseSize(size: string) {

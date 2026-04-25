@@ -16,9 +16,7 @@ CREATE TABLE IF NOT EXISTS workspace_state (
   color_scheme_id TEXT NOT NULL DEFAULT 'preset-okabe-ito',
   custom_colors_json TEXT,
   count INTEGER NOT NULL DEFAULT 1,
-  reference_image_path TEXT,
-  reference_image_name TEXT,
-  reference_image_mime_type TEXT,
+  reference_images_json TEXT,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -30,12 +28,9 @@ INSERT OR IGNORE INTO workspace_state (
   color_scheme_id,
   custom_colors_json,
   count,
-  reference_image_path,
-  reference_image_name,
-  reference_image_mime_type,
   updated_at
 )
-VALUES (1, '', 'auto', 'high', 'preset-okabe-ito', NULL, 1, NULL, NULL, NULL, CURRENT_TIMESTAMP);
+VALUES (1, '', 'auto', 'high', 'preset-okabe-ito', NULL, 1, CURRENT_TIMESTAMP);
 
 CREATE TABLE IF NOT EXISTS custom_color_schemes (
   id TEXT PRIMARY KEY,
@@ -62,7 +57,7 @@ CREATE TABLE IF NOT EXISTS generation_jobs (
   color_scheme_id TEXT NOT NULL,
   custom_colors_json TEXT,
   count INTEGER NOT NULL,
-  reference_image_path TEXT,
+  reference_images_json TEXT,
   status TEXT NOT NULL,
   completed_count INTEGER NOT NULL DEFAULT 0,
   failed_count INTEGER NOT NULL DEFAULT 0,
@@ -79,7 +74,7 @@ CREATE TABLE IF NOT EXISTS generation_images (
   quality TEXT NOT NULL,
   color_scheme_id TEXT NOT NULL,
   custom_colors_json TEXT,
-  reference_image_path TEXT,
+  reference_images_json TEXT,
   image_path TEXT,
   status TEXT NOT NULL,
   width INTEGER,

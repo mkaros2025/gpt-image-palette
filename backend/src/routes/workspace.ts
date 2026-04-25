@@ -2,8 +2,9 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
 import type { SqliteDatabase } from '../db/client.js';
-import { createWorkspaceRepo } from '../repositories/workspaceRepo.js';
+import { createWorkspaceRepo, type ReferenceImage } from '../repositories/workspaceRepo.js';
 import type { FileStore } from '../services/fileStore.js';
+import { normalizeReferenceImage } from '../services/referenceImage.js';
 
 const customColorsSchema = z.record(z.string(), z.string()).nullable().default(null);
 
@@ -27,45 +28,65 @@ export function registerWorkspaceRoutes(app: FastifyInstance, db: SqliteDatabase
     return reply.send(toWorkspaceResponse(workspace, fileStore));
   });
 
-  app.post('/api/workspace/reference-image', async (request, reply) => {
+  app.post('/api/workspace/reference-images', async (request, reply) => {
     const current = await repo.getWorkspace();
-    const part = await request.file();
-    if (!part) {
-      return reply.code(400).send({ message: 'No reference image provided.' });
+    const uploaded: ReferenceImage[] = [];
+
+    for await (const part of request.files()) {
+      if (!part.mimetype.startsWith('image/')) {
+        return reply.code(400).send({ message: 'Reference images must be image files.' });
+      }
+
+      let normalized;
+      try {
+        normalized = await normalizeReferenceImage(await part.toBuffer());
+      } catch {
+        return reply.code(400).send({ message: 'Reference image could not be processed.' });
+      }
+
+      const relativePath = fileStore.joinRelative(
+        'workspace',
+        'reference-images',
+        `${Date.now()}-${randomSlug(8)}.${normalized.extension}`,
+      );
+      await fileStore.writeFile(relativePath, normalized.bytes);
+      uploaded.push({
+        path: relativePath,
+        name: part.filename || normalized.filename,
+        mimeType: normalized.mimeType,
+      });
     }
 
-    if (!part.mimetype.startsWith('image/')) {
-      return reply.code(400).send({ message: 'Reference image must be an image file.' });
+    if (uploaded.length === 0) {
+      return reply.code(400).send({ message: 'No reference images provided.' });
     }
 
-    if (current.referenceImagePath) {
-      await fileStore.removeFile(current.referenceImagePath);
-    }
-
-    const extension = mimeTypeToExtension(part.mimetype, part.filename);
-    const relativePath = fileStore.joinRelative(
-      'workspace',
-      'reference-images',
-      `${Date.now()}-${randomSlug(8)}.${extension}`,
-    );
-    const bytes = await part.toBuffer();
-    await fileStore.writeFile(relativePath, bytes);
-
-    const workspace = repo.setReferenceImage({
-      referenceImagePath: relativePath,
-      referenceImageName: part.filename || 'reference-image',
-      referenceImageMimeType: part.mimetype,
-    });
-
+    const workspace = repo.setReferenceImages([...current.referenceImages, ...uploaded]);
     return toWorkspaceResponse(workspace, fileStore);
   });
 
-  app.delete('/api/workspace/reference-image', async () => {
+  app.delete('/api/workspace/reference-images/:index', async (request, reply) => {
+    const { index: rawIndex } = request.params as { index: string };
+    const index = Number.parseInt(rawIndex, 10);
     const current = await repo.getWorkspace();
-    if (current.referenceImagePath) {
-      await fileStore.removeFile(current.referenceImagePath);
+
+    if (!Number.isInteger(index) || index < 0 || index >= current.referenceImages.length) {
+      return reply.code(404).send({ message: 'Reference image not found.' });
     }
-    const workspace = repo.clearReferenceImage();
+
+    const removed = current.referenceImages[index];
+    if (removed) {
+      await fileStore.removeFile(removed.path);
+    }
+
+    const workspace = repo.setReferenceImages(current.referenceImages.filter((_, itemIndex) => itemIndex !== index));
+    return toWorkspaceResponse(workspace, fileStore);
+  });
+
+  app.delete('/api/workspace/reference-images', async () => {
+    const current = await repo.getWorkspace();
+    await Promise.all(current.referenceImages.map((image) => fileStore.removeFile(image.path)));
+    const workspace = repo.clearReferenceImages();
     return toWorkspaceResponse(workspace, fileStore);
   });
 }
@@ -73,16 +94,11 @@ export function registerWorkspaceRoutes(app: FastifyInstance, db: SqliteDatabase
 function toWorkspaceResponse(workspace: Awaited<ReturnType<ReturnType<typeof createWorkspaceRepo>['getWorkspace']>>, fileStore: FileStore) {
   return {
     ...workspace,
-    referenceImagePath: workspace.referenceImagePath ? fileStore.toPublicUrl(workspace.referenceImagePath) : null,
+    referenceImages: workspace.referenceImages.map((image) => ({
+      ...image,
+      path: fileStore.toPublicUrl(image.path),
+    })),
   };
-}
-
-function mimeTypeToExtension(mimeType: string, filename?: string | null) {
-  if (mimeType === 'image/png') return 'png';
-  if (mimeType === 'image/jpeg') return 'jpg';
-  if (mimeType === 'image/webp') return 'webp';
-  const suffix = filename ? filename.split('.').pop() : null;
-  return suffix || 'png';
 }
 
 function randomSlug(length: number) {

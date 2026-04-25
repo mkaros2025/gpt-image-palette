@@ -26,6 +26,12 @@ export type ColorScheme = {
   updatedAt: string | null;
 };
 
+export type ReferenceImage = {
+  path: string;
+  name: string | null;
+  mimeType: string | null;
+};
+
 export type Workspace = {
   prompt: string;
   size: string;
@@ -33,9 +39,7 @@ export type Workspace = {
   colorSchemeId: string;
   customColors: PaletteColors | null;
   count: number;
-  referenceImagePath: string | null;
-  referenceImageName: string | null;
-  referenceImageMimeType: string | null;
+  referenceImages: ReferenceImage[];
   updatedAt: string;
 };
 
@@ -62,7 +66,7 @@ export type HistoryItem = {
   quality: string;
   colorSchemeId: string;
   customColors: PaletteColors | null;
-  referenceImagePath: string | null;
+  referenceImages: ReferenceImage[];
   imagePath: string | null;
   status: string;
   width: number | null;
