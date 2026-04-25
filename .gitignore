@@ -30,3 +30,6 @@ backend/data/
 
 # Logs
 *.log
+
+# Do not vendor upstream prompt example images
+third_party/awesome-gpt-image-2-prompts/images/
